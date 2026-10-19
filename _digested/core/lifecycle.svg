@@ -28,7 +28,7 @@
 
   <!-- Lane 3 -->
   <rect x="60" y="332" width="1440" height="112" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
-  <text x="80" y="358" font-size="14" font-weight="bold" fill="#78350f">③ 异步 · SemanticProcessor + DAG（32 并发，自底向上）</text>
+  <text x="80" y="358" font-size="14" font-weight="bold" fill="#78350f">③ 异步 · SemanticExecutor + Work（32 并发，事件驱动惰性派发）</text>
   <text x="80" y="382" font-size="12.5" fill="#475569">文件摘要 → 目录 overview → write_abstract_overview 原子写 .abstract.md / .overview.md（OKF sidecar）→ L2 在文件摘要后即时向量化</text>
   <text x="80" y="406" font-size="12.5" fill="#475569">L0/L1 只在 sidecar body digest（sha256）变化时才重新向量化 · 增量按 changed_paths 跳过未变更文件</text>
   <text x="80" y="430" font-size="12" fill="#92400e">这就是「mkdir 后 ls 立即可见、find 要等一会儿」的原因：可见=边界②，可被语义命中=边界④</text>
@@ -81,5 +81,5 @@
 
   <text x="780" y="1030" text-anchor="middle" font-size="13" fill="#64748b">读法：同步段只有"收单 + 暂存 + 入队"；之后每一站都是独立并发的队列 worker——所以任何一站挂了，</text>
   <text x="780" y="1056" text-anchor="middle" font-size="13" fill="#64748b">数据只是"停在上一站"，不会丢（at-least-once）——但也不会立刻可见（要走到边界②/④）。</text>
-  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/core/lifecycle.svg · 基线 0f77ab56 · 细节见 05-lifecycle-deep.md</text>
+  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/core/lifecycle.svg · 基线 v0.5.0（建档基线 0f77ab56） · 细节见 05-lifecycle-deep.md</text>
 </svg>

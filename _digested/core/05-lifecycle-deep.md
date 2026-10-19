@@ -50,7 +50,7 @@ QueueFS 挂载在 AGFS `/queue`（挂载点解析 `agfs_utils.py:215-245 resolve
 > **旧链漏了一条独立路径**：`filter_in_tenant` 是**第三个**查询路径（`_semantic.py:333 _find_by_filter`），旧的"语义检索链"描述里没有它。
 
 > **v0.5.0 反转：原"修正 1/2/3"全部作废。** 收敛判停、dir_queue 优先队列、hotness 混入都已随递归一起删除——它们描述的机制**现已不存在**，不是"精度问题"。当前检索只有一条单程管道，详见 [03](03-retrieval-global-recall.md)。以下两条仍有效（已重锚）：
-- **（仍有效）scope/ACL 过滤在向量查询层，不是查后过滤**：`_build_scope_filter`（`storage/viking_vector_index_backend.py:2951-2991`）= `Eq(context_type)` + 租户 `Eq(account_id)`（`:3007`）+ visible_roots 的多目标 `Or(PathScope(...))`（`:2975-2980`）+ `In(level)`（`:2988-2989`），全在 filter 里；**ACL 开启时**再注入 `acl_direct_grants/acl_inherited_grants` 的 `In` 过滤——这与 core/01 的 URI 层 ACL 是**两层不同的防线**（查询层过滤 vs 读取边界）。检索返回字段面 9 个：`RETRIEVAL_OUTPUT_FIELDS`（`:60-68`）。
+- **（仍有效）scope/ACL 过滤在向量查询层，不是查后过滤**：`_build_scope_filter`（`storage/viking_vector_index_backend.py:2951-2991`）= `Eq(context_type)` + 租户 `Eq(account_id)`（`:3007`）+ visible_roots 的多目标 `Or(PathScope(...))`（`:2975-2980`）+ `In(level)`（`:2988-2989`），全在 filter 里；**ACL 开启时**再注入 `acl_direct_grants/acl_inherited_grants` 的 `In` 过滤——这与 core/01 的 URI 层 ACL 是**两层不同的防线**（查询层过滤 vs 读取边界）。检索返回字段面 **7 个**：`RETRIEVAL_OUTPUT_FIELDS`（`:60-68`）= `uri`/`level`/`context_type`/`abstract`/`active_count`/`updated_at`/`search_tags`。（⚠️ **2026-10-19 更正**：原文写"9 个"，实测 7 个；锚点 `:60-68` 本身是对的，错的是数。）
 - 补充事实（已重锚）：image_query **强制 QUICK 不精排**（`hierarchical_retriever.py:124-126` 的 `use_rerank` 含 `not image_query`）且 context_type 兜底为 resource（`:136-137`）。
 - **作废**："L2 叶子预检索仅 ACL 开启时发生"——递归删除后没有"预检索"这一步；"rerank 看的是 L1 文本，依据 `embedding_utils.py:445-446`"——该区域现在是 abstract 字节截断注释，官方 `docs/en/concepts/03-context-layers.md` 明确 "The L1 rerank scalar remains the plain L1 body"。
 

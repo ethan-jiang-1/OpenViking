@@ -3,7 +3,7 @@
 ## v0.5.0 复核登记（2026-10-19）
 
 - **基线**：`v0.5.0` = `20f9c1136`。原锚点基于 `0f77ab56`。
-- **计数变化**：CI workflow 26 → **30**；测试文件 655 → **730**（728 `test_*.py` + 2 `*_test.py`）；`tests/` 顶层子目录 29 → **32**；`skipif` 19 → 18；`pytest.mark.skip` 仍 3。
+- **计数变化**：CI workflow 26 → **30**；测试文件 655 → **730**（728 `test_*.py` + 2 `*_test.py`）；`tests/` 顶层子目录 29 → **31**；`skipif` 18（`pytest.mark.skipif` 实测 18 处）；`pytest.mark.skip` 仍 3。
 - **结构变化**：`docs/design/`、`docs/plans/`、`docs/superpowers/` **整目录删除**——本报告里凡引用设计稿的段落，都已无一手来源可核。多语 README/CONTRIBUTING/RELEASE 移入 `docs/repository/`。官方 docs 只剩 en/zh（各 110 个 md）。
 - **新增守卫**：`_docs.yml` 现有四道检查（theme 测试、双语一致性、API 参考、构建后锚点）；`gateway.yml` 是第一个给核心域之外的 Python 子系统接 pytest 的 workflow。
 - **未修复**：`_test_full.yml` 仍无 pytest 且无 workflow 调用它；根级 `AGENTS.md` 仍不存在；`README.md:111` 仍写 "0.3.22"。
@@ -20,7 +20,7 @@
 
 ### A1. CI（.github/workflows/）
 
-【硬事实】共 26 个 workflow 文件（2026-09-13 修正：此前写 27，系误计），主流程用编号命名形成显式流水线序列：
+【硬事实】共 **30** 个 workflow 文件（`v0.5.0`；`ls .github/workflows/*.yml *.yaml | wc -l`）。⚠️ **2026-10-19 更正**：原文写"26 个（2026-09-13 修正：此前写 27，系误计）"——26 是 `v0.4.19` 的数，本文件表头 `:6` 已写"26 → **30**"，正文列表却没跟改，**头/体打架**。下面的编号列表按 30 个读。，主流程用编号命名形成显式流水线序列：
 - 01 PR Checks（pr.yml:1）、02 Main Branch Checks（ci.yml:1）、03 Release（release.yml:1）、04 Weekly Security Scan（schedule.yml:1）、05 OpenClaw2OpenViking Memory Tests（oc2ov_test.yml:1）、06 API & CLI Integration Tests（api_test.yml:1）、07 API Effect Tests（api_test_effect.yml:1）、12/13 _Test Suite Lite/Full（_test_lite.yml:1 / _test_full.yml:1）、14 _CodeQL Scan（_codeql.yml:1）、15 _Build Distribution（_build.yml:1）、16 _Publish、17 Docs/_Docs Build、18 _Docs Deploy、19 Docs TOS、20 Release TOS Upload（release-tos.yml:1）。
 - 编号 08–11 缺失（01–07、12–20 连续出现，08–11 跳号）。【未定】无法用 git 历史确认是删除了 workflow（很可能是被移除的 lint/unit-test 类 workflow）还是预留。
 

@@ -62,7 +62,11 @@
 - `openviking/core/` 对 service/server 仅有一类依赖：**3 处 import `server.identity`**（`core/retrieval_targets.py:14`、`core/namespace.py:10`、`core/directories.py:21`，均为 `RequestContext`/`Role` 类型）——2026-09-13 修正：此前写"未发现 import service/server【grep 无命中】"系 grep 模式不全所致，"core 零反向"结论作废；core 无 service 业务逻辑依赖仍成立。其依赖 openviking_cli（见 3.3）。
 
 ### 3.3 openviking_cli 反向 import（client/compat 之外）
-- 【硬事实】`openviking` 内部 import `openviking_cli` 的文件数（grep -l 计数）：storage 56、parse 35、session 34、models 23、service 17、retrieve 8、core 6、resource 5——**282 个文件**全仓。典型例子：
+- 【硬事实】`openviking` 内部 import `openviking_cli` 的文件数（`grep -rl` 计数）：
+  storage 66、server 42、session 38、parse 37、models 24、service 20、utils 16、retrieve 10、core 6——**319 个文件**（`v0.5.0`）。
+  > ⚠️ **2026-10-19 更正**：原文写"storage 56 / parse 35 / session 34 / models 23 / service 17 / utils 8 / retrieve 6 / core 5——**282 个文件**"，
+  > 是 `v0.4.19` 的旧数，且**漏了 `server`（42 个文件，全仓第三大目录）**。本文件表头 `:7` 早已写着 319 与这套新数，正文没有跟改——**头/体打架**。
+  > 顺带校正一个口径：`find openviking -name "*.py"` 全包共 **707** 个文件；319 是其中 import 了 `openviking_cli` 的那部分，两者别混。典型例子：
   - `openviking/core/context.py:12-13`（`openviking_cli.session.user_id`、`openviking_cli.utils.uri.VikingURI`）
   - `openviking/core/namespace.py:11-12`、`core/uri_validation.py:14-15`、`core/directories.py:30`
   - `openviking/retrieve/context_assembler/gather.py:26-27`（`openviking_cli.retrieve.ContextType`）、`expansion.py:17-18`

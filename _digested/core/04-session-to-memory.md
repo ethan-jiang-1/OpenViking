@@ -40,7 +40,8 @@ Phase 2 续跑入口：`session.py:1947` `_run_memory_extraction()`；分批：`
 **决策主体是 LLM，不是相似度阈值函数**：
 
 - 合并安全策略作为 prompt 注入：`memory/merge_policy.py:5-19` `MEMORY_MERGE_POLICY`——"相似只是候选线索；**同 identity 才可 merge**；删除前每条事实须有归宿；不确定就保持独立"；注入点 `session_extract_context_provider.py:242`、`patch_merge_context_provider.py:148`
-- 写入策略按 schema 字段定义：`memory/merge_op/base.py:121-127` `MergeOp = PATCH | REPLACE | SUM`（另有 `IMMUTABLE`，如 `prompts/templates/memory/entities.yaml:33,39`）
+- 写入策略按 schema 字段定义：`session/memory/merge_op/base.py:121-127` `MergeOp = PATCH | REPLACE | SUM | IMMUTABLE`（四成员，`:127` 是 `IMMUTABLE = "immutable"`）。yaml 里用小写 `merge_op: immutable`。
+  > ⚠️ **2026-10-19 更正**：原文写"另有 `IMMUTABLE`，如 `prompts/templates/memory/entities.yaml:33,39`"——**那个例子是错的**：`entities.yaml` 全文 `grep -c immutable` = **0**，`:33` 与 `:39` 都是 `merge_op: replace`。真实位置：`cases.yaml:62,71,80,91,99`、`events.yaml:129,152`、`experiences.yaml:21`、`identity.yaml:33`、`preferences.yaml:31`（`grep -rn "merge_op: immutable" openviking/prompts/templates/memory/`）。
 
 **代码侧只做确定性 skip**（policy/validation 层）：
 

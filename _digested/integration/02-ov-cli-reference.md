@@ -1,7 +1,6 @@
 # 02 `ov` CLI 完整命令参考：接入面的第四条门，逐命令取证
 
-> **基线**：`v0.5.0`（2026-10-19 同步；建档基线 `0f77ab56`）。取证来源：对 `crates/ov_cli/` 的全量源码枚举（并行取证 agent 报告，2026-09-12；2026-10-19 对 v0.5.0 复核），与 `docs/en/agent-integrations/16-capability-reference.md` §5.1、`docs/en/getting-started/05-cli-setup.md` 交叉验证。
-> 姊妹篇：[`01-start-here`](01-start-here.md)（七种接入形态与选择）。本文回答："`ov` 到底支持什么、哪些必须 server 在跑"。
+> **基线**：`v0.5.0`（2026-10-19 同步；建档基线 `0f77ab56`）。取证来源：对 `crates/ov_cli/` 的全量源码枚举（并行取证 agent 报告，2026-09-12；2026-10-19 对 v0.5.0 **部分**复核——**覆盖的是命令树与旗标语义（44 个顶层变体、取值集合、纯本地命令分类），不含 `main.rs` 的逐行行号**。⚠️ 为此必须声明：本文引用的 `main.rs:NNNN` 行号**整组仍停在建档基线 `0f77ab56`**，在 `v0.5.0` 上已整体下移约 +75～+130 行（例：`Commands::Version` 旧 `:3642` → 现 `:3815`）。**查行号请以源码为准，别信本文的行号**——这不是行号个别漂移，是成体系未重锚）。本文回答："`ov` 到底支持什么、哪些必须 server 在跑"。
 
 ## 先给结论
 
@@ -81,7 +80,7 @@
 | `tui` | 全屏 alternate-screen 文件浏览器，先探活 /health | a+c（`tui/mod.rs:23-41`） |
 | `config` | 无子命令=交互向导（含 User Management）；show/validate/add/edit/delete/list/switch | c / b（add-edit 混合）（`config_wizard/wizard.rs:85`） |
 | `admin`（16 子命令） | create/delete/list-accounts、migrate、register/list/remove-user、set-role、regenerate-key、group 五件套、set-account-settings | a，多数需 `--sudo`（`main.rs:1916-2084`） |
-| `reindex` | 重建索引：`--mode vectors_only\|semantic_and_vectors\|prune_orphans`、`--dry-run`、`--wait` 默认 true | a，可用 `--sudo`（`main.rs:1214-1260`） |
+| `reindex` | 重建索引：`--mode vectors_only\|semantic_and_vectors`（**只有两个值**；clap 的 `value_parser` 在 `crates/ov_cli/src/main.rs:1372-1376`，服务端同一个集合见 `reindex_executor.py` 的 `SUPPORTED_MODES_BY_TYPE`）、`--dry-run`、`--wait` 默认 true | a，可用 `--sudo`（`main.rs:1214-1260`）<br>⚠️ **2026-10-19 更正**：本行原文列过第三个值 `prune_orphans`——**全仓源码零命中**（`grep -rn prune_orphans --include=*.rs --include=*.py .` → 无），照原文敲命令会被 clap 直接拒绝。且 [`core/05`](../core/05-lifecycle-deep.md) 早已记载该模式已被删除——此处是**跨文档自相矛盾**。 |
 | `system` | wait/status/health/consistency/backend sync-status/sync-retry；`crypto init-key` | a；crypto=b（`system.rs`/`crypto.rs`） |
 | `privacy` | categories/list/get/upsert/versions/version/activate | a（`main.rs:1834-1914`） |
 | `language`（lang） | 设 en/zh-CN | b |
@@ -90,9 +89,15 @@
 
 【硬事实】对照 `docs/en/agent-integrations/16-capability-reference.md` §5.1 与 `05-cli-setup.md`：一致项很多（默认端口、语言门、exit code 2-6、skills validate 唯一离线、health 恒 exit 0、"doctor 不在 Rust 二进制中"）。**不一致（docs 缺漏）**：
 
-1. docs "Writing data" 漏了 `cp`（`main.rs:639`）；
-2. docs 完全没提 `acl` 组（`main.rs:292-320`）；
-3. docs 的 admin 列表缺 6 个 group 子命令与 `set-account-settings`（`main.rs:1993-2083`）。
+> ⚠️ **2026-10-19 二次复核：这一节原文的三条里，前两条是错的，已撤回。**
+> 1. ~~docs "Writing data" 漏了 `cp`~~ → **错**：`docs/en/getting-started/05-cli-setup.md:205` 的 'Write and organize' 行就是 `` `ov write`, `ov mkdir`, `ov mv`, `ov cp`, `ov rm` ``。
+> 2. ~~docs 完全没提 `acl` 组~~ → **错**：`docs/en/concepts/15-acl.md:149,155` 有 `ov acl grant …`，`docs/en/api/12-acl.md:69-71` 也有。
+> 3. docs 的 admin 列表缺 6 个 group 子命令与 `set-account-settings`（行号见下方"行号未重锚"声明）——**此条未复核，请当作待验**。
+>
+> 教训：**"官方文档缺了 X"是最容易写错的一类断言**，因为它要求你穷举整个 `docs/`。原文三条，两条反了。
+> 行号也随之失效（`main.rs:639` 是旧基线）。
+
+内部小瑕疵（无行为影响）
 
 内部小瑕疵（无行为影响）：`main.rs:2689` observer 子命令表含 "transaction"，但实际 ObserverCommands 无此子命令——配置门死分支。
 
@@ -109,7 +114,7 @@
 
 **44 个顶层命令：一个没增、没删、没改名。** 这是本轮同步里少见的"零 breaking 面"——对照同期 MCP 工具 +5、pi 工具名全改、Watch 语义收紧，CLI 是稳定的那一面。
 
-> **口径说明**：44 = `enum Commands` 的**顶层变体数**，实测方式是对 `crates/ov_cli/src/main.rs:364-1414` 的枚举体做变体名提取；**`0f77ab56` 与 `v0.5.0` 逐个比对，44 个变体名字集合完全一致**。此前草稿曾误记 41，是手工清点遗漏。与第 8 行的"约 18 个命令组、110+ 子命令"并不矛盾——那两个数是**含嵌套子命令**的另一口径，引用时勿混。
+> **口径说明**：44 = `enum Commands` 的**顶层变体数**，实测方式是对 `crates/ov_cli/src/main.rs:364-1414` 的枚举体做变体名提取；**`0f77ab56` 与 `v0.5.0` 逐个比对，44 个变体名字集合完全一致（**这一条是复核过的**；与之相对，行号没有）**。此前草稿曾误记 41，是手工清点遗漏。与第 8 行的"约 18 个命令组、110+ 子命令"并不矛盾——那两个数是**含嵌套子命令**的另一口径，引用时勿混。
 
 新增两个参数/语义：
 
