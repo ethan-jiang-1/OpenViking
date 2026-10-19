@@ -32,6 +32,9 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 DOC_GLOBS = ["_digested/**/*.md", "_faq_on_digested/**/*.md"]
 
+# The tool's own docs quote anchors as examples; don't scan them.
+SKIP_DOCS = ("_digested/_tools/",)
+
 # `foo.py:12`, `foo.py:12-34`, `foo.py:12,34`
 ANCHOR_RE = re.compile(
     r"`([A-Za-z0-9_\-/\.]+\.(?:py|rs|cpp|h|hpp|toml|json|mjs|js|ts|tsx|sh|sql))"
@@ -82,6 +85,8 @@ def check(strict):
 
     for doc in docs:
         rel_doc = os.path.relpath(doc, REPO)
+        if any(rel_doc.startswith(prefix) for prefix in SKIP_DOCS):
+            continue
         with open(doc, encoding="utf-8") as fh:
             for lineno, line in enumerate(fh, 1):
                 if any(marker in line for marker in TOMBSTONE_MARKERS):

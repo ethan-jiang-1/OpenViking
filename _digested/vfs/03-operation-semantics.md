@@ -3,7 +3,18 @@
 > **基线**：`v0.5.0`（2026-10-19 同步；建档基线 `0f77ab56`）。取证原料 [vfs-platforms-evidence](../_notes/vfs-platforms-evidence.md) §1。动机：回答"它是 VFS，所以支持所有文件操作、shell 命令也能跑？"——答案是**对一半**。
 
 >
-> **v0.5.0 影响**：本维度讲的是 Rust ragfs 与 OS 的接缝，**v0.5.0 未改动这一层**（`crates/ragfs` 的洋葱顺序、7 插件、`chmod` no-op、Windows `MoveFileExW` 全部保持）。本次只重锚行号；`viking://agent` 命名空间的变化见 [`core/01`](../core/01-viking-uri-and-vfs.md)。
+> **v0.5.0 影响**：~~本维度讲的是 Rust ragfs 与 OS 的接缝，**v0.5.0 未改动这一层**~~
+>
+> ⚠️ **2026-10-19 更正：这句话是错的，已撤回。** 真正未变的是**洋葱顺序、7 插件、`chmod` no-op、Windows `MoveFileExW`** 这些"结构件"；但 `crates/ragfs/src` 实测 **34 文件 / +4481−1083**，是本轮改动第二重的层。按幅度：
+>
+> | 变化 | 证据 |
+> |---|---|
+> | PathLock 后端从 **2 个变 3 个**：新增 Redis 后端 `RedisPathLockProvider` | `lock/cache_provder.rs` **文件新增**（内容 1869 行），`lock/mod.rs:27` 导出 |
+> | 锁配置长出 `provider` 三选一 + `namespace` | `openviking_cli/utils/config/agfs_config.py:308-348`（`filesystem`/`memory`/`cache`，`cache` 必填 namespace 且限 ASCII） |
+> | `localfs` 插件重写 819 行 | `crates/ragfs/src/plugins/localfs/mod.rs` |
+> | 锁管理器重写 397 行、锁指标与 wrapper 各改 200 行量级 | `lock/manager.rs`、`lock/metrics.rs`、`lock/wrapper.rs` |
+>
+> **对本文的影响**：下面凡涉及"锁"的论断，都是**按 `filesystem` 单后端写的**。真正跨进程/跨机器时，现在可以选 Redis——那时的原子性和活性保证由 `cache_provder.rs` 提供而非本地文件系统。`viking://agent` 命名空间的变化见 [`core/01`](../core/01-viking-uri-and-vfs.md)。
 
 ## 先给结论
 
