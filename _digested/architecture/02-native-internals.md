@@ -4,7 +4,7 @@
 
 ## 先给结论
 
-RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路由器**（按路径前缀把操作分发给挂载的插件）+ **7 个插件**（3 个内容存储 + 4 个服务队列）+ **一套纯 Rust 的 git 语义对象存储**（快照/commit/restore 的真正实现地）+ 加密/多写/统计三个包装器洋葱。C++ 侧则是**四个 PyCapsule 暴露的内存向量引擎**：`VolatileIndex` 全内存扫描 + x86 SIMD 变体加速距离计算，持久化靠 leveldb 的 KVStore capsule，GPU ANN 交给 cuVS 适配器——**没有 HNSW/IVF 类图索引**。调用图见 [`callgraph.svg`](callgraph.svg)。
+RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路由器**（按路径前缀把操作分发给挂载的插件）+ **7 个插件**（**4 个内容存储**：`kvfs`/`localfs`/`memfs`/`s3fs` + **3 个服务面**：`queuefs`/`serverinfofs`/`sqlfs`；`crates/ragfs/src/plugins/mod.rs:14-21` 逐个 re-export）+ **一套纯 Rust 的 git 语义对象存储**（快照/commit/restore 的真正实现地）+ 加密/多写/统计三个包装器洋葱。C++ 侧则是**四个 PyCapsule 暴露的内存向量引擎**：`VolatileIndex` 全内存扫描 + x86 SIMD 变体加速距离计算，持久化靠 leveldb 的 KVStore capsule，GPU ANN 交给 cuVS 适配器——**没有 HNSW/IVF 类图索引**。调用图见 [`callgraph.svg`](callgraph.svg)。
 
 ## A. RAGFS 内部（crates/ragfs/src/）
 
@@ -31,9 +31,9 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 
 ### A4. PyO3 方法面（`crates/ragfs-python/src/lib.rs`）
 
-`RAGFSBindingClient` 暴露约 49 个 `#[pyo3]` 方法（含 8 个 `pathlock_*`、5 个 `git_*`、`system_sync_*` 等）。代表性锚点（**2026-10-19 对 `v0.5.0` 重锚**；`lib.rs` 从 3321 行涨到 **3681** 行，`crates/ragfs-python` 整体 +431/−71）：`read(path,offset,size,stream)`（`:1862`）、`write(path,data,max_retries=3)`（`:1914`）、**`rm(path, recursive=false)`**（`:2005`）、**`mv`**（`:2050`）、`chmod`（`:2093`）、**`touch`**（`:2116`；绑定层无 truncate）、**`tree_directory`**（`:2338`）、**`glob_directory`**（`:2399`）、**`digest(path, algorithm="xxh3")`**（`:2490`）。Python 侧 `AsyncAGFSClient` 把它们全部 `asyncio.to_thread` 化（`pyagfs/async_client.py`）。
+`RAGFSBindingClient` 的 `#[pymethods]` 块（`lib.rs:1502` 起）暴露 **52 个方法**，其中 **15 个是 `pathlock_*`**：`acquire_exact`/`acquire_exact_batch`/`acquire_exact_tree_batch`/`acquire_tree`/`acquire_tree_batch`/`acquire_batch`/`release`/`release_selected`/`handoff`/`to_handoff`/`adopt`/`observe`/`refresh`/`is_locked`/`as_borrowed`。**原文写"约 49 个方法、含 8 个 `pathlock_*`"——方法数基本对（52），`pathlock_*` 数少了一半（8→15）**，与 `vfs/01` 记录的"PathLock 从 2 后端扩到 3 后端、新增整套批量/CAS/adopt/handoff 动作"对不上。此外还有 5 个 `git_*`、`system_sync_*` 等。
 
-> **锚点漂移说明**：旧版这一段的 `:1681 :1733 :1773 :1825 …` 全部是 `0f77ab56` 的行号，**在 v0.5.0 上整体下移约 180 行**（`read` 1681→1862）。旧版另外还锚了 `mkdir :1773`、`copy_within_mount :1891`、`mount :1993`、`grep :2088` 与 8 个 `pathlock_*` 具体行号——这些在 v0.5.0 未逐个复核，**按未定处理，引用前请自行 grep**。
+> **锚点漂移说明**：旧版这一段的 `:1681 :1733 :1773 :1825 …` 全部是 `0f77ab56` 的行号，**在 v0.5.0 上整体下移约 180 行**（`read` 1681→1862）。旧版另外还锚了 `mkdir :1773`、`copy_within_mount :1891`、`mount :1993`、`grep :2088` 与当时记的 8 个 `pathlock_*` 具体行号（实际有 15 个，见上）——这些在 v0.5.0 未逐个复核，**按未定处理，引用前请自行 grep**。
 
 【解释】值得注意：**绑定层比 VikingFS 暴露面更宽**（如 `chmod`、`digest`、`stream` 读）——Python 操作面的裁剪（无 chmod、find=语义）是产品决策不是能力边界（呼应 [`../vfs/03`](../vfs/03-operation-semantics.md)）。
 
