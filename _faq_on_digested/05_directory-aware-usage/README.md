@@ -40,13 +40,13 @@ flowchart LR
 
 ## 三条贯穿的使用契约
 
-1. **目录 = 语义容器**：目录名 + L0 摘要（≤256 字符）是第一跳的全部信号（`hierarchical_retriever.py:227` 只搜 `level=[0,1]`）；
+1. **目录 = 语义容器**：目录名 + L0 摘要（≤256 字符）是检索的主要语义信号（~~`hierarchical_retriever.py:227` 只搜 `level=[0,1]`~~——**该锚点与机制均已失效**：`:227` 现在是 `scores = await self._rerank_scores(`，`level=[0` 全仓零命中。`v0.5.0` 是单次全局召回，**这条契约的结论仍成立、机制解释不再成立**，见 [`scenarios/_V050_RETRACTION.md`](scenarios/_V050_RETRACTION.md)）；
 2. **查询 = 作用域检索**：带 `--uri`/scope 的查询才吃到 DSQ 红利（论文 Figure 11：路径越具体质量越高）；
 3. **结构 = 可演化**：MOVE/MERGE 是特性，重组后等语义刷新（freshness 冒泡）。
 
 ## 证据锚点
 
 - 论文：`04_agentic-rag-foundation/_raw/directory_aware.txt`（IV-C 场景动机 / Table IV·VI·VII 数字 / V-C DSM / V-E 深度敏感性）
-- 代码：`openviking/retrieve/hierarchical_retriever.py`（THINKING/QUICK、L0/L1 第一跳、递归收敛、分数传播，基线 `0f77ab56`）
+- 代码：`openviking/retrieve/hierarchical_retriever.py`（**`v0.5.0` 仍成立**：THINKING/QUICK 判定、L0/L1 摘要参与召回；~~递归收敛、分数传播~~——**已删除，非死锚而是能力移除**，该文件从 672 行缩到 381 行。本文相关段的机制解释见 [`scenarios/_V050_RETRACTION.md`](scenarios/_V050_RETRACTION.md)）
 - 配置前提（rerank/VLM/后端）：[FAQ 03](../03_rag-stack-volcano-vs-configurable/answer.md)
 - 论文验证与对比全景：[FAQ 04](../04_agentic-rag-foundation/answer.md)
