@@ -12,7 +12,7 @@ L0（一句话摘要）/ L1（概览）/ L2（全文）不是文档修辞，而�
 
 - 层枚举：`openviking/core/context.py:34-39` `ContextLevel`：`ABSTRACT=0`（L0）、`OVERVIEW=1`（L1）、`DETAIL=2`（L2）
 - sidecar 文件名常量：`openviking/storage/abstract_overview.py:29` `ABSTRACT_OVERVIEW_FILENAMES = {".abstract.md", ".overview.md"}`
-- 向量记录按 level 存储（L0/L1/L2 各一条）。**v0.5.0 起 level 是索引侧过滤条件**：`retrieve()` 把 `level` 下推给 `search_in_tenant(level=...)`（`hierarchical_retriever.py:183-204`），最终变成 `viking_vector_index_backend.py:2988-2989` 的 `In("level", level)`。**分层先于检索存在**——但它现在是**过滤维度**，不再是递归骨架（旧的 `:301-307`/`:542` 两条锚点在递归代码里，已随递归删除）。
+- 向量记录按 level 存储（L0/L1/L2 各一条）。**v0.5.0 起 level 是索引侧过滤条件**：`retrieve()` 把 `level` 下推给 `search_in_tenant(level=...)`（`hierarchical_retriever.py:183-204`），最终变成 `viking_vector_index_backend.py:2989` 的 `In("level", level)`（这是**检索路径**上的下推点；同文件另有 6 处 level 过滤用于取回/枚举/inventory，不要把这一处当成整个机制的全部——见 [`../harness/02-Boundaries/2.1_closed_enums.md`](../harness/02-Boundaries/2.1_closed_enums.md)） 的 `In("level", level)`。**分层先于检索存在**——但它现在是**过滤维度**，不再是递归骨架（旧的 `:301-307`/`:542` 两条锚点在递归代码里，已随递归删除）。
 
 ## 谁生成 L0/L1：三条路径
 
