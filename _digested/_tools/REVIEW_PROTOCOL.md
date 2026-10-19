@@ -20,9 +20,9 @@
 ### 1. 伪造引文（最严重，出现 5 次）
 声称某文件"原文写"某句话，而那句话**不存在**。
 
-- `00-the-root.md:42` 说 `02-context-types.md:3` 自述"人类认知模式的简化映射"——该行实际是"OpenViking manages three types of context…"，且 `简化映射/认知模式` 全仓零命中。
-- `05/scenarios/04:82` 引 `03-context-layers.md` 的 `"TODO: control bubbling frequency"`——全仓零命中（除该行自身）。
-- `vfs/03:56` 引 `_semantic.py:306` 的 `search_type="find", use_rerank=False`——`use_rerank` 只存在于 `hierarchical_retriever.py`。
+- `00-the-root.md` 曾把 `02-context-types.md:3` 自述"人类认知模式的简化映射"——该行实际是"OpenViking manages three types of context…"，且 `简化映射/认知模式` 全仓零命中。
+- `05_directory-aware-usage/scenarios/04-namespace-evolution.md:86` 引 `03-context-layers.md` 的 `"TODO: control bubbling frequency"`——全仓零命中（除该行自身）。
+- `vfs/03-operation-semantics.md` 的 `find` 行曾引 `_semantic.py:306` 的 `search_type="find", use_rerank=False`——`use_rerank` 只存在于 `hierarchical_retriever.py`。
 - `_faq_on_digested/04/answer.md` 曾把一个**不存在的**官方句子挂在真实行号上（`architecture/02` 同款）。
 
 **查法**：把引号里的内容去掉 `**`/`` ` `` 和省略号，`grep -F` 到被引文件里。**引号是承诺，不是修辞。**
@@ -30,7 +30,7 @@
 ### 2. 引文已删除，但仍当现行引（出现 3 次）
 句子曾经存在，某版本删了，文档还在用现在时引。
 
-- `2.2:26` 引 capability-reference 的 `"future updates will be centrally published there"`——`v0.5.0` 已删（同套 1.1 却正确记录了它已消失 → **跨文档自相矛盾**）。
+- `2.2_version_contracts.md` 曾引 capability-reference 的 `"future updates will be centrally published there"`——`v0.5.0` 已删（同套 1.1 却正确记录了它已消失 → **跨文档自相矛盾**）。
 - `core/02` 把 `v0.5.0` 删掉的 `docs/design/*.md` RFC 当活文档对照。
 - `vfs/02` 引 quickstart 的 `OS: Linux, macOS, Windows`——`v0.5.0` 整篇重写后该串已不存在。
 
@@ -40,8 +40,8 @@
 说"某东西在仓库里找不到/不存在"，而它其实在。
 
 - `4.1:24` "README 的 benchmark 数字（82.08%）在仓库内 grep 不到"——三份 README 的 SVG `alt` 文本里各有 1 处。
-- `4.1:30` "现在只有一份 README 仍在病"——三份都还是 `0.3.22`。
-- `00-the-root:66` "`Save original` 这个字符串在源码里不存在"——至少能反驳"不在 video/audio 解析器里"这个更窄的说法。
+- `4.1_docs_for_humans.md` 曾写 "旧文说三份同病，现在是一份仍在病"——三份都还是 `0.3.22`。
+- `00-the-root.md` 曾断言 "`Save original` 这个字符串在源码里不存在"——至少能反驳"不在 video/audio 解析器里"这个更窄的说法。
 - `kind=15 工具` 曾散落在 SVG 里，正文已改 20 → 图未跟。
 
 **查法**：否定断言要用**最宽的** grep 验（不加 `--include`、不加 `-w`）。**否定比肯定更容易错**，因为它要求穷举。
@@ -74,9 +74,9 @@
 ### 7. 状态标注变成免检通行证（出现 2 次）
 `【硬事实】`、`[verified]`、"行号已重锚" 一旦写上去，下一轮复核就跳过它。
 
-- `_faq_on_digested/04/answer.md:103` 的【硬事实】仍列"THINKING 递归机制"，而同文件 `:117` 已写它被删了。
-- `4.1:65` "全部数字实测复现，无一处需要改"——同一文件 `:24`/`:30` 两处是错的。
-- `4.2:67` 在 ✅ 表里认证 `agent-plugins/README.md:48-49`，而同文件正文 `:18` 已改成 `:57`。
+- `_faq_on_digested/04/answer.md` 的【硬事实】曾仍列"THINKING 递归机制"，而同文件 `:117` 已写它被删了。
+- `4.1_docs_for_humans.md` 曾写 "全部数字实测复现，无一处需要改"——同一文件 `:24`/`:30` 两处是错的。
+- `4.2_docs_for_agents.md` 在 ✅ 表里认证 `agent-plugins/README.md:48-49`，而同文件正文已改成 `:57`——**第五轮发现锚点汇总与评审表两处都还没改**，一条事实被修成三种口径。
 
 **规则**：**状态标注的每一行都必须带复核日期或删除戳**。标了免检的句子，是下一轮最容易腐烂的地方——因为它连读都不会被读。
 
@@ -86,6 +86,8 @@
 **图的危害比句子大**：过期的句子读起来可疑，过期的图看起来就是事实。
 
 **查法**：SVG 里的数字和脚注基线，和同目录正文一起改。
+
+> **本文件的案例锚点也会腐化。** 每改一次被引文档，这里的 `文件:行号` 就可能失效——第四轮修完 `05/scenarios/04` 后，本文件原本的 `04:82` 就变成了空行。**案例的价值在线号所指的内容，不在号本身**；复核时若号对不上，按引文去 grep 找新位置即可。
 
 ## 一条元规则
 
