@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1020" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="cg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1560" height="1020" fill="#fafbfc"/>
+  <text x="780" y="44" text-anchor="middle" font-size="25" font-weight="bold" fill="#0f172a">三语言调用图：Python 的两只手，一只伸进 Rust，一只伸进 C++</text>
+  <text x="780" y="72" text-anchor="middle" font-size="14" fill="#64748b">两条桥互不经过对方，都在 server 进程内；内容与索引是两套独立持久化</text>
+
+  <!-- Python top -->
+  <rect x="70" y="90" width="1420" height="130" rx="14" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="95" y="118" font-size="16" font-weight="bold" fill="#1e3a8a">Python 层（openviking + openviking_cli）</text>
+  <rect x="95" y="132" width="660" height="74" rx="9" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="115" y="156" font-size="13" font-weight="bold" fill="#1e40af">VikingFS（7 mixin）</text>
+  <text x="115" y="178" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">read/write/mkdir/rm/mv/cp/ls/tree/glob/grep + snapshot + ACL + find/search</text>
+  <text x="115" y="197" font-size="11.5" fill="#92400e">mv/rm 编排"内容+索引"同步；PathLock 调 Rust；快照是 Rust git 层的皮</text>
+  <rect x="785" y="132" width="685" height="74" rx="9" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="805" y="156" font-size="13" font-weight="bold" fill="#4c1d95">vectordb（storage/vectordb/）</text>
+  <text x="805" y="178" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">LocalIndex / VolatileIndex / IndexEngineProxy(读写锁) · schema: uri/level/content/vector</text>
+  <text x="805" y="197" font-size="11.5" fill="#4d7c0f">云适配器 factory：local / cuvs / http / volcengine / vikingdb —— local 走 C++，其余走云 API</text>
+
+  <!-- bridges -->
+  <line x1="425" y1="220" x2="425" y2="292" stroke="#475569" stroke-width="2.2" marker-end="url(#cg)"/>
+  <text x="440" y="242" font-size="12.5" fill="#334155" font-weight="bold">桥 1 · PyO3（进程内，无网络）</text>
+  <text x="440" y="262" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">AsyncAGFSClient(asyncio.to_thread) → RAGFSBindingClient</text>
+  <text x="440" y="282" font-size="11.5" fill="#94a3b8">~49 方法：read/write(max_retries=3)/mkdir/rm/mv/copy_within_mount/chmod/touch/grep/tree_directory/glob_directory/digest/mount/pathlock_*×8</text>
+  <line x1="1120" y1="220" x2="1120" y2="292" stroke="#475569" stroke-width="2.2" marker-end="url(#cg)"/>
+  <text x="1135" y="242" font-size="12.5" fill="#334155" font-weight="bold">桥 2 · CPython Limited API（abi3 cp310）</text>
+  <text x="1135" y="262" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">import _native / _x86_{sse3,avx2,avx512} → 4 个 PyCapsule 句柄</text>
+  <text x="1135" y="282" font-size="11.5" fill="#94a3b8">CMake OUTPUT_NAME 决定真名（CMakeLists.txt:339 / :270-295）· 加载校验 abi3-v1</text>
+
+  <!-- Rust box -->
+  <rect x="70" y="300" width="880" height="420" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+  <text x="95" y="330" font-size="16" font-weight="bold" fill="#78350f">Rust 层 · RAGFS（crates/ragfs）—— 内容存储 + 队列 + 快照</text>
+
+  <rect x="95" y="346" width="830" height="64" rx="9" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="115" y="370" font-size="12.5" font-weight="bold" fill="#92400e">包装器洋葱（请求穿过顺序）</text>
+  <text x="115" y="394" font-size="12.5" fill="#475569" font-family="'SF Mono',Consolas,monospace">StatsWrappedFS（统计）→ PathLockWrappedFS（路径锁）→ MountableFS（前缀路由）→ 各后端内：MultiWriteWrappedFS → EncryptionWrappedFS</text>
+
+  <rect x="95" y="424" width="500" height="118" rx="9" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="115" y="448" font-size="12.5" font-weight="bold" fill="#92400e">内容插件 3 个（可被加密发布）</text>
+  <text x="115" y="472" font-size="12" fill="#475569">localfs —— 唯一触 OS 磁盘（{workspace}/viking）</text>
+  <text x="115" y="494" font-size="12" fill="#475569">s3fs（对象键）· memfs（内存）</text>
+  <text x="115" y="518" font-size="11.5" fill="#b45309">factory.rs:30：加密发布仅此三家 · Windows 专属路径全在 localfs</text>
+
+  <rect x="615" y="424" width="310" height="118" rx="9" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="635" y="448" font-size="12.5" font-weight="bold" fill="#92400e">服务插件 4 个</text>
+  <text x="635" y="472" font-size="12" fill="#475569">queuefs（QueueFS，默认 sqlite）</text>
+  <text x="635" y="494" font-size="12" fill="#475569">kvfs · sqlfs · serverinfofs</text>
+  <text x="635" y="518" font-size="11.5" fill="#b45309">不在 /local 内容路径上</text>
+
+  <rect x="95" y="556" width="830" height="140" rx="9" fill="#ffffff" stroke="#fcd34d"/>
+  <text x="115" y="580" font-size="12.5" font-weight="bold" fill="#92400e">git 层 = "git 语义的纯 Rust 对象存储"（不是真 git 仓库）</text>
+  <text x="115" y="604" font-size="12" fill="#475569">仅借 gix-hash / gix-object / zlib：object_store（内容寻址，唯一 tmp+rename）· ref_store · commit · tree_builder</text>
+  <text x="115" y="628" font-size="12" fill="#475569">index_store：INDEX_FORMAT_VERSION=1，精确相等拒绝（与 ovpack v3 同一铁律）</text>
+  <text x="115" y="652" font-size="12" fill="#475569">Python 的 snapshot(commit/restore/diff/log) 只是这层的皮 —— 快照真身在 Rust，跟内容同后端</text>
+  <text x="115" y="680" font-size="11.5" fill="#b45309">PathLock（token 侧车文件 + TTL）也在这层 · 详见 vfs/01 与 vfs/02 风险表</text>
+
+  <!-- C++ box -->
+  <rect x="980" y="300" width="510" height="420" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2"/>
+  <text x="1005" y="330" font-size="16" font-weight="bold" fill="#4c1d95">C++ 层 · abi3 向量引擎（src/）</text>
+  <rect x="1000" y="346" width="470" height="60" rx="9" fill="#ffffff" stroke="#c4b5fd"/>
+  <text x="1020" y="368" font-size="12" font-weight="bold" fill="#4c1d95" font-family="'SF Mono',Consolas,monospace">4 capsules: IndexEngine · KVStore · Schema · BytesRow</text>
+  <text x="1020" y="390" font-size="11.5" fill="#6d28d9">leveldb vendored 静态链；schema: uri/level/content/vector</text>
+  <rect x="1000" y="420" width="470" height="120" rx="9" fill="#ffffff" stroke="#c4b5fd"/>
+  <text x="1020" y="444" font-size="12.5" font-weight="bold" fill="#4c1d95">索引 = 内存全量扫描 + x86 SIMD（无 HNSW/IVF）</text>
+  <text x="1020" y="468" font-size="12" fill="#475569">VolatileIndex（内存态）· IndexEngineProxy 读写锁 · L0/L1/L2 按 level 过滤</text>
+  <text x="1020" y="490" font-size="12" fill="#475569">x86 三变体 sse3/avx2/avx512 = 距离计算指令集差异（运行时探测）</text>
+  <text x="1020" y="514" font-size="11.5" fill="#6d28d9">规模含义：单机中小规模友好；大规模走云适配器或 cuvs(GPU)</text>
+  <rect x="1000" y="554" width="470" height="100" rx="9" fill="#ffffff" stroke="#c4b5fd"/>
+  <text x="1020" y="578" font-size="12.5" font-weight="bold" fill="#4c1d95">与内容层的关系</text>
+  <text x="1020" y="602" font-size="12" fill="#475569">两套独立持久化（leveldb vs AGFS）→ 需 system consistency 对账</text>
+  <text x="1020" y="626" font-size="12" fill="#475569">向量只存 URI+向量+元数据；内容永远读自 AGFS（单一数据源）</text>
+  <text x="1020" y="650" font-size="11.5" fill="#6d28d9">mv/rm 的 URI 同步在 Python 层编排（架构/01 判断的补充）</text>
+
+  <!-- cloud adapters -->
+  <rect x="980" y="742" width="510" height="56" rx="10" fill="#f8fafc" stroke="#7c3aed" stroke-dasharray="6 4"/>
+  <text x="1020" y="766" font-size="12.5" font-weight="bold" fill="#4c1d95">云适配器（绕过整个 C++ 层）</text>
+  <text x="1020" y="788" font-size="12" fill="#475569">cuvs（GPU ANN）· http · volcengine · vikingdb —— 配置 backend 即换</text>
+
+  <!-- footer -->
+  <rect x="70" y="830" width="1420" height="60" rx="10" fill="#fff7ed" stroke="#ea580c"/>
+  <text x="95" y="855" font-size="13" font-weight="bold" fill="#9a3412">这版比 architecture/01 深在哪</text>
+  <text x="95" y="878" font-size="12.5" fill="#7c2d12">① 桥的方法面（~30 PyO3 方法 vs 4 capsule）② Rust 内部 = 洋葱包装 + 路由器 + 7 插件 + git 语义对象存储 ③ C++ 是"内存扫描+SIMD"而非图索引 —— 单机定位由此而来 ④ 快照/锁/加密三件事的真身都在 Rust</text>
+  <text x="1535" y="1000" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/architecture/callgraph.svg · 基线 v0.5.0（2026-10-19）· 细节见 02-native-internals.md</text>
+</svg>

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1480 640" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="qs" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="qsr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#dc2626"/>
+    </marker>
+  </defs>
+  <rect width="1480" height="640" fill="#fafbfc"/>
+  <text x="740" y="42" text-anchor="middle" font-size="23" font-weight="bold" fill="#0f172a">QueueFS 消息状态机：at-least-once + 无死信队列</text>
+  <text x="740" y="70" text-anchor="middle" font-size="13.5" fill="#64748b">enqueue 写 {path}/enqueue · dequeue 读 {path}/dequeue · ack 写 {path}/ack —— 队列操作即 AGFS 文件操作（Rust sqlite 插件）</text>
+
+  <!-- pending -->
+  <rect x="90" y="150" width="200" height="80" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+  <text x="190" y="185" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e3a8a">pending</text>
+  <text x="190" y="210" text-anchor="middle" font-size="11.5" fill="#475569">消息在 /queue（sqlite）</text>
+
+  <!-- processing -->
+  <rect x="420" y="150" width="220" height="80" rx="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+  <text x="530" y="185" text-anchor="middle" font-size="16" font-weight="bold" fill="#713f12">processing</text>
+  <text x="530" y="210" text-anchor="middle" font-size="11.5" fill="#475569">dequeue → on_dequeue（未 ack）</text>
+  <line x1="290" y1="190" x2="412" y2="190" stroke="#475569" stroke-width="2" marker-end="url(#qs)"/>
+
+  <!-- done -->
+  <rect x="770" y="60" width="200" height="70" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <text x="870" y="90" text-anchor="middle" font-size="15" font-weight="bold" fill="#14532d">ack → 删除</text>
+  <text x="870" y="112" text-anchor="middle" font-size="11.5" fill="#166534">成功才 ack · 消息消失</text>
+  <line x1="640" y1="160" x2="762" y2="108" stroke="#475569" stroke-width="2" marker-end="url(#qs)"/>
+
+  <!-- crash -> recoverstale -->
+  <rect x="770" y="170" width="230" height="86" rx="12" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="885" y="196" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#991b1b">崩溃未 ack</text>
+  <text x="885" y="218" text-anchor="middle" font-size="11.5" fill="#b91c1c">RecoverStale：下次启动重排队</text>
+  <text x="885" y="238" text-anchor="middle" font-size="11.5" fill="#b91c1c">（at-least-once 的来源）</text>
+  <line x1="640" y1="180" x2="762" y2="204" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#qsr)"/>
+  <path d="M 885 256 C 885 330, 540 340, 300 240" fill="none" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#qsr)"/>
+  <text x="600" y="330" text-anchor="middle" font-size="11.5" fill="#b91c1c">回到 pending（消息可能被重复消费——消费者必须幂等）</text>
+
+  <!-- self requeue -->
+  <rect x="770" y="290" width="230" height="86" rx="12" fill="#fff7ed" stroke="#ea580c" stroke-width="2"/>
+  <text x="885" y="316" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#9a3412">瞬时错误 → 自我重入队</text>
+  <text x="885" y="338" text-anchor="middle" font-size="11.5" fill="#c2410c">无次数上限 · 抑流三阀：</text>
+  <text x="885" y="358" text-anchor="middle" font-size="11.5" fill="#c2410c">熔断 5 次/60s 复位/上限600s · 45s 去重窗 · coalesce_key</text>
+  <line x1="640" y1="215" x2="762" y2="316" stroke="#ea580c" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#qsr)"/>
+  <path d="M 770 333 C 600 400, 420 380, 320 240" fill="none" stroke="#ea580c" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#qsr)"/>
+
+  <!-- dead -->
+  <rect x="1100" y="290" width="290" height="86" rx="12" fill="#f1f5f9" stroke="#64748b" stroke-width="2"/>
+  <text x="1245" y="316" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#334155">永久 / AUTH / 超限</text>
+  <text x="1245" y="338" text-anchor="middle" font-size="11.5" fill="#475569">直接丢弃 + 记账（AUTH 不重试防死循环）</text>
+  <text x="1245" y="358" text-anchor="middle" font-size="12" font-weight="bold" fill="#b91c1c">无死信队列——消息没了就是没了</text>
+  <line x1="1000" y1="333" x2="1092" y2="333" stroke="#dc2626" stroke-width="2" marker-end="url(#qsr)"/>
+
+  <!-- concurrency table -->
+  <rect x="90" y="440" width="1300" height="120" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="115" y="468" font-size="14" font-weight="bold" fill="#334155">7 个标准队列（queue_manager.py:82-89）与并发度（:201-215，可配 queue_worker_config.py）</text>
+  <text x="115" y="496" font-size="12.5" fill="#475569" font-family="'SF Mono',Consolas,monospace">Embedding=10   Semantic=32   ExternalParse=4   AddResource=4   SessionCommit=8（1s 轮询）   ExternalTask=10   UserDeletion=1</text>
+  <text x="115" y="524" font-size="12" fill="#475569">每队列一条 daemon 线程 + 独立事件循环，信号量限流；锁走 pathlock，消息内 lock_handoff 移交所有权，坏 handoff 兜底重取</text>
+  <text x="115" y="548" font-size="11.5" fill="#94a3b8">现状 vs 配置警示：embedding.batch_size=32 配置存在但全库无消费点 · queuefs sqlite 表结构编译在 Rust 扩展内，不在本仓库</text>
+
+  <text x="740" y="615" text-anchor="middle" font-size="12.5" fill="#64748b">推论：消费者必须幂等（确定性主键 vector_record_id=md5(account,uri,level) 正是为此）——重复投递在该体系里是常态而非异常。</text>
+  <text x="1460" y="632" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/core/queue-state.svg · 基线 0f77ab56 · 锚点见 05-lifecycle-deep.md</text>
+</svg>

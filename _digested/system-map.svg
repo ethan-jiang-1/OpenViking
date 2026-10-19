@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1160" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="arg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#7c3aed"/>
+    </marker>
+  </defs>
+  <rect width="1560" height="1160" fill="#fafbfc"/>
+  <text x="780" y="44" text-anchor="middle" font-size="25" font-weight="bold" fill="#0f172a">OpenViking 系统总览：一张图看懂谁连着谁</text>
+  <text x="780" y="72" text-anchor="middle" font-size="14" fill="#64748b">单进程 server · 多入口汇合到同一棵 viking:// 树 · 内容在 Rust 层落盘 · 语义在 C++/云端索引</text>
+
+  <!-- consumers -->
+  <rect x="70" y="95" width="440" height="64" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+  <text x="290" y="122" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#0f172a">Coding Agents（主要客户）</text>
+  <text x="290" y="144" text-anchor="middle" font-size="12" fill="#475569">Claude Code · Codex · Cursor · OpenClaw · OpenCode（官方插件/skill）</text>
+  <rect x="540" y="95" width="380" height="64" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+  <text x="730" y="122" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#0f172a">人</text>
+  <text x="730" y="144" text-anchor="middle" font-size="12" fill="#475569">Web Studio（浏览/试搜） · ov TUI / ov CLI</text>
+  <rect x="950" y="95" width="540" height="64" rx="10" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+  <text x="1220" y="122" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#0f172a">脚本 / 应用</text>
+  <text x="1220" y="144" text-anchor="middle" font-size="12" fill="#475569">三语言 SDK（Python / TypeScript / Go） · LangChain · 任意 MCP client</text>
+
+  <line x1="290" y1="159" x2="290" y2="188" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="730" y1="159" x2="730" y2="188" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+  <line x1="1220" y1="159" x2="1220" y2="188" stroke="#475569" stroke-width="2" marker-end="url(#ar)"/>
+
+  <!-- server box -->
+  <rect x="60" y="195" width="1440" height="560" rx="16" fill="#ffffff" stroke="#2563eb" stroke-width="2.5"/>
+  <text x="85" y="225" font-size="17" font-weight="bold" fill="#1e3a8a">OpenViking Server —— 单进程 asyncio 应用（默认 :1933）</text>
+  <text x="85" y="247" font-size="12" fill="#64748b">lifespan 九步装配（app.py:329-410）：service 构造 → metrics/audit → OAuth store+GC → TaskTracker 清理 → tracing → MCP session manager</text>
+
+  <!-- access strip -->
+  <rect x="85" y="262" width="1390" height="52" rx="9" fill="#dbeafe" stroke="#2563eb"/>
+  <text x="780" y="284" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1e3a8a">接入面（全部汇合到同一个 service 实例）</text>
+  <text x="780" y="304" text-anchor="middle" font-size="12" fill="#1e40af">HTTP API（26 个 router 注册，/api/v1 为主） · MCP（15 个工具，/mcp） · WebDAV（/webdav/resources） · Bot 代理（/bot/v1，--with-bot） · 鉴权插件 5 个导入即注册（dev/api_key/trusted 无条件，oidc/ldap 条件注册）</text>
+
+  <!-- services row -->
+  <rect x="85" y="332" width="440" height="118" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="305" y="358" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#14532d">文件系统服务</text>
+  <text x="305" y="382" text-anchor="middle" font-size="12" fill="#166534" font-family="'SF Mono',Consolas,monospace">ls read write mkdir rm mv cp grep glob</text>
+  <text x="305" y="406" text-anchor="middle" font-size="12" fill="#475569">→ VikingFS：URI→/local/{account}/… + ACL 过滤</text>
+  <text x="305" y="428" text-anchor="middle" font-size="11.5" fill="#4d7c0f">目录即数据记录（自带 L0/L1 与向量）</text>
+
+  <rect x="545" y="332" width="440" height="118" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="765" y="358" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#14532d">语义检索服务</text>
+  <text x="765" y="382" text-anchor="middle" font-size="12" fill="#166534" font-family="'SF Mono',Consolas,monospace">find（QUICK）· search（THINKING+rerank）</text>
+  <text x="765" y="406" text-anchor="middle" font-size="12" fill="#475569">两级检索：先向量命中目录（L0/L1）→ 目录内递归</text>
+  <text x="765" y="428" text-anchor="middle" font-size="11.5" fill="#4d7c0f">分数传播 α·子+(1-α)·父 · 3 轮收敛判停 · 检索轨迹可解释</text>
+
+  <rect x="1005" y="332" width="440" height="118" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="1225" y="358" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#14532d">记忆服务（session→memory）</text>
+  <text x="1225" y="382" text-anchor="middle" font-size="12" fill="#166534" font-family="'SF Mono',Consolas,monospace">session commit → 两阶段异步抽取</text>
+  <text x="1225" y="406" text-anchor="middle" font-size="12" fill="#475569">Phase1 路径锁内切 archive → Phase2 LLM 抽取</text>
+  <text x="1225" y="428" text-anchor="middle" font-size="11.5" fill="#4d7c0f">merge 策略：PATCH / REPLACE / SUM（identity 才可合并）</text>
+
+  <!-- queues -->
+  <rect x="545" y="470" width="440" height="58" rx="10" fill="#fef9c3" stroke="#ca8a04"/>
+  <text x="765" y="494" text-anchor="middle" font-size="13" font-weight="bold" fill="#713f12">QueueFS 持久化队列（sqlite）</text>
+  <text x="765" y="515" text-anchor="middle" font-size="11.5" fill="#854d0e">语义处理队列 · session commit 队列 —— 失败重入队，server 重启不丢</text>
+
+  <!-- storage layer -->
+  <rect x="85" y="552" width="640" height="150" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="110" y="578" font-size="14.5" font-weight="bold" fill="#78350f">内容存储 VikingFS → RAGFS（Rust，PyO3 进程内）</text>
+  <text x="110" y="602" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">viking://x → /local/{account_id}/x → localfs（默认）</text>
+  <text x="110" y="626" font-size="12" fill="#475569">PathLock：token 侧车文件 + TTL · 加密：HKDF(account_id) 整层打穿 Rust</text>
+  <text x="110" y="650" font-size="12" fill="#475569">快照（commit/restore/diff）走 Rust git 层 · 多写可挂 s3fs 备份</text>
+  <text x="110" y="678" font-size="11.5" fill="#92400e">文档类原件默认不保留（入库即转换 + 生成 L0/L1 摘要）；媒体类默认保留原件（大图除外）</text>
+
+  <rect x="745" y="552" width="640" height="150" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="770" y="578" font-size="14.5" font-weight="bold" fill="#4c1d95">向量索引（只存 URI+向量+元数据，不存内容）</text>
+  <text x="770" y="602" font-size="12" fill="#475569">默认：C++ abi3 引擎（leveldb 本地，x86 sse3/avx2/avx512 变体）</text>
+  <text x="770" y="626" font-size="12" fill="#475569">可选：cuvs（GPU）· http · volcengine · vikingdb（云）—— 配置即换</text>
+  <text x="770" y="650" font-size="12" fill="#475569">L0/L1/L2 各存一条记录（level 字段）· mv/rm 时同步更新 URI</text>
+  <text x="770" y="678" font-size="11.5" fill="#6d28d9">与内容层可独立组合：内容在 S3、索引在本地（或反之）</text>
+
+  <!-- data flow -->
+  <text x="85" y="738" font-size="14" font-weight="bold" fill="#334155">两条主数据流：</text>
+  <rect x="85" y="752" width="1390" height="86" rx="10" fill="#f8fafc" stroke="#94a3b8"/>
+  <text x="105" y="778" font-size="12.5" fill="#0f172a" font-weight="bold">写（异步管线）</text>
+  <text x="105" y="802" font-size="12" fill="#475569">add-resource → Parser（PDF/URL/code/git/image/audio…）→ temp 树 → TreeBuilder 建 URI → ResourceProcessor 落库 → 语义队列 → SemanticProcessor 生成 L0/L1 → 向量化入索引</text>
+  <text x="105" y="826" font-size="12.5" fill="#0f172a" font-weight="bold">读（同步调用）</text>
+  <text x="290" y="826" font-size="12" fill="#475569">find/search → 查询向量化 → 索引召回（+rerank）→ 返回 L0/L1 摘要与 URI → agent 决定 → read 拉 L2 全文</text>
+
+  <!-- right annotations? footer -->
+  <rect x="85" y="862" width="1390" height="64" rx="10" fill="#fff7ed" stroke="#ea580c"/>
+  <text x="105" y="888" font-size="13" font-weight="bold" fill="#9a3412">新人三个必记事实</text>
+  <text x="105" y="912" font-size="12.5" fill="#7c2d12">① viking:// 不挂载进 OS（无 FUSE/WinFSP），只在 API/MCP/CLI/SDK 边界存在 ② 磁盘上是密文 + .abstract.md/.overview.md sidecar，文档类原件默认不保留（媒体类默认保留） ③ 除 5 个纯本地命令外，ov/SDK/插件全部要求 server 在跑</text>
+
+  <text x="780" y="968" text-anchor="middle" font-size="13" fill="#64748b">读法：从上往下是"客户 → 入口 → 服务 → 存储"的调用方向；黄色队列把写路径的同步调用切成异步——这是"server 重启不丢任务"的原因。</text>
+  <text x="1535" y="1140" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/system-map.svg · 基线 0f77ab56 · 细节见 integration/03 与 architecture/01-02</text>
+</svg>

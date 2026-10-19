@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1190" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <defs>
+    <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1560" height="1190" fill="#fafbfc"/>
+
+  <text x="780" y="44" text-anchor="middle" font-size="25" font-weight="bold" fill="#0f172a">viking:// 到磁盘：五层技术路线（三平台横切面）</text>
+  <text x="780" y="72" text-anchor="middle" font-size="14" fill="#64748b">前四层三平台字节级相同 · 跨平台难度被压缩到 L5 的唯一翻译点（localfs）</text>
+
+  <!-- Access boundary -->
+  <rect x="80" y="92" width="980" height="36" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
+  <text x="570" y="115" text-anchor="middle" font-size="13.5" fill="#334155">接入边界：Agent / 宿主 ── MCP（15 工具）· HTTP API · ov CLI · SDK ── 全部走 server 进程，不经过 OS</text>
+
+  <!-- L1 -->
+  <rect x="80" y="150" width="980" height="96" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="105" y="182" font-size="17" font-weight="bold" fill="#1e3a8a">L1 · URI 层（Python）</text>
+  <text x="105" y="208" font-size="13" fill="#1e40af" font-family="'SF Mono',Consolas,monospace">viking://user/u1/memories/preferences</text>
+  <text x="105" y="232" font-size="12.5" fill="#475569">scope 白名单（resources / user / agent）· 目录即数据记录 · _safe_uri_parts 拆段校验</text>
+
+  <line x1="570" y1="246" x2="570" y2="268" stroke="#475569" stroke-width="2" marker-end="url(#arr2)"/>
+
+  <!-- L2 -->
+  <rect x="80" y="272" width="980" height="96" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="105" y="304" font-size="17" font-weight="bold" fill="#1e3a8a">L2 · 映射层（Python）</text>
+  <text x="105" y="330" font-size="13" fill="#1e40af" font-family="'SF Mono',Consolas,monospace">→ /local/{account_id}/user/u1/memories/preferences</text>
+  <text x="105" y="354" font-size="12.5" fill="#475569">纯前缀替换 _uri_to_path（_access.py:635）· 这是 AGFS 逻辑路径，不是 OS 路径 · account 隔离=路径第一段</text>
+
+  <line x1="570" y1="368" x2="570" y2="390" stroke="#475569" stroke-width="2" marker-end="url(#arr2)"/>
+
+  <!-- L3 -->
+  <rect x="80" y="394" width="980" height="96" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="105" y="426" font-size="17" font-weight="bold" fill="#78350f">L3 · RAGFS 挂载层（Rust，PyO3 进程内绑定）</text>
+  <text x="105" y="452" font-size="13" fill="#92400e" font-family="'SF Mono',Consolas,monospace">mount: /local → localfs 插件（agfs_utils.py:338）</text>
+  <text x="105" y="476" font-size="12.5" fill="#475569">PathLock：token 侧车文件 + TTL 回收 · 加密：HKDF(account_id) · 多写 primary+backups —— 三件打穿 Rust 的事</text>
+
+  <line x1="570" y1="490" x2="570" y2="512" stroke="#475569" stroke-width="2" marker-end="url(#arr2)"/>
+
+  <!-- L4 -->
+  <rect x="80" y="516" width="980" height="96" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="105" y="548" font-size="17" font-weight="bold" fill="#78350f">L4 · 内容后端插件（Rust）</text>
+  <text x="105" y="574" font-size="13" fill="#92400e" font-family="'SF Mono',Consolas,monospace">localfs ｜ s3fs（路径=对象键）｜ memfs</text>
+  <text x="105" y="598" font-size="12.5" fill="#475569">服务插件 kvfs / queuefs(sqlite) / sqlfs 不在内容路径 · 换后端 = 换掉整个 L5 的 OS 语义</text>
+
+  <line x1="570" y1="612" x2="570" y2="634" stroke="#475569" stroke-width="2" marker-end="url(#arr2)"/>
+
+  <!-- L5 -->
+  <rect x="80" y="638" width="980" height="210" rx="12" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="105" y="670" font-size="17" font-weight="bold" fill="#0f172a">L5 · OS 边界 —— <tspan fill="#b91c1c">唯一翻译点（三平台在此分叉）</tspan></text>
+  <text x="105" y="694" font-size="12.5" fill="#475569" font-family="'SF Mono',Consolas,monospace">resolve_path(): validate → strip '/' → PathBuf::join · base_path = fs::canonicalize（Windows 得 \\?\ verbatim，隐式长路径）</text>
+  <g font-size="11.5">
+    <rect x="100" y="710" width="300" height="118" rx="9" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="115" y="734" font-size="14" font-weight="bold" fill="#14532d">Linux · ext4（一等验证）</text>
+    <text x="115" y="758" fill="#166534">fs::rename 目标存在 → 静默覆盖</text>
+    <text x="115" y="779" fill="#166534">CAS：dev + ino · 锁：OFD (Fcntl)</text>
+    <text x="115" y="800" fill="#166534">大小写敏感 · glibc 2.31 wheel</text>
+    <text x="115" y="821" fill="#4d7c0f">PR 门禁唯一平台</text>
+
+    <rect x="420" y="710" width="300" height="118" rx="9" fill="#e0e7ff" stroke="#4f46e5"/>
+    <text x="435" y="734" font-size="14" font-weight="bold" fill="#312e81">macOS · APFS</text>
+    <text x="435" y="758" fill="#3730a3">fs::rename 覆盖 · CAS dev+ino</text>
+    <text x="435" y="779" fill="#3730a3">⚠ 大小写不敏感（零防护）</text>
+    <text x="435" y="800" fill="#3730a3">Apple Silicon → 引擎 native 变体</text>
+    <text x="435" y="821" fill="#4338ca">wheel ×2（arm64 / x86_64）</text>
+
+    <rect x="740" y="710" width="300" height="118" rx="9" fill="#dbeafe" stroke="#2563eb"/>
+    <text x="755" y="734" font-size="14" font-weight="bold" fill="#1e3a8a">Windows · NTFS（4 处专属路径）</text>
+    <text x="755" y="756" fill="#1e40af">MoveFileExW(REPLACE) + UTF-16 宽字符</text>
+    <text x="755" y="777" fill="#1e40af">CAS：卷序号+FileIndex · 锁：LockFileEx</text>
+    <text x="755" y="798" fill="#1e40af">rename 目标存在 → 报错（语义分裂）</text>
+    <text x="755" y="819" fill="#1e40af">引擎 .pyd = MinGW 构建（无 MSVC）</text>
+  </g>
+
+  <!-- Right annotations -->
+  <g font-size="12" fill="#475569">
+    <rect x="1085" y="150" width="450" height="96" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="1103" y="176" font-weight="bold" fill="#0f172a" font-size="13.5">协议层封死 Windows 语义</text>
+    <text x="1103" y="199">_safe_uri_parts 拒绝 .. 、 \ 、 X: 段</text>
+    <text x="1103" y="221">255 字节组件截断 + sha256 前 8 位后缀</text>
+
+    <rect x="1085" y="272" width="450" height="96" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="1103" y="298" font-weight="bold" fill="#0f172a" font-size="13.5">Python 层零 OS 路径拼接</text>
+    <text x="1103" y="321">POSIX 斜杠字符串是层间唯一约定</text>
+    <text x="1103" y="343">加密临时路径也按 / 切分重建</text>
+
+    <rect x="1085" y="394" width="450" height="96" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="1103" y="420" font-weight="bold" fill="#0f172a" font-size="13.5">锁 · 加密 · 多写：全平台无关</text>
+    <text x="1103" y="443">TTL 过期回收 ≠ OS 锁生命周期</text>
+    <text x="1103" y="465">PyO3 in-process 调用，无网络跳</text>
+
+    <rect x="1085" y="516" width="450" height="96" rx="10" fill="#ffffff" stroke="#cbd5e1"/>
+    <text x="1103" y="542" font-weight="bold" fill="#0f172a" font-size="13.5">唯一接触磁盘的只有 localfs</text>
+    <text x="1103" y="565">物理目录 = {workspace}/viking（默认 ~/.openviking）</text>
+    <text x="1103" y="587">磁盘上是密文 + .abstract.md / .overview.md sidecar</text>
+
+    <rect x="1085" y="638" width="450" height="210" rx="10" fill="#fff7ed" stroke="#ea580c"/>
+    <text x="1103" y="664" font-weight="bold" fill="#9a3412" font-size="13.5">4 处 Windows 专属代码路径 = 买来的可移植性</text>
+    <text x="1103" y="688">① GetFileInformationByHandle 文件身份</text>
+    <text x="1103" y="710">② MoveFileExW 覆盖式移动（宽字符）</text>
+    <text x="1103" y="732">③ filelocks Fcntl → Windows 上映射 LockFileEx</text>
+    <text x="1103" y="754">④ vendored .abi3.pyd 显式查找分支</text>
+    <text x="1103" y="780" fill="#b91c1c">风险：chmod no-op · 大小写/保留名零防护</text>
+    <text x="1103" y="802" fill="#b91c1c">0600 密钥仅 unix · Rust 单测不进 CI</text>
+    <text x="1103" y="828" fill="#9a3412">验证档位：发版产物 + main 分支 api_test（非 PR 门禁）</text>
+  </g>
+
+  <!-- Bottom: vector parallel path -->
+  <rect x="80" y="890" width="640" height="130" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="105" y="920" font-size="15.5" font-weight="bold" fill="#4c1d95">并行通道 · 检索不落盘</text>
+  <text x="105" y="946" font-size="12.5" fill="#475569">find / search → vectordb → C++ abi3 引擎（local）/ cuvs / volcengine / vikingdb</text>
+  <text x="105" y="970" font-size="12.5" fill="#475569">索引只存 URI + 向量 + 元数据，不存内容；mv / rm 同步更新 URI 元数据</text>
+  <text x="105" y="994" font-size="12.5" fill="#6d28d9">内容层与索引层可独立组合：内容在 S3，索引在本地（或反之）</text>
+
+  <rect x="740" y="890" width="795" height="130" rx="12" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+  <text x="765" y="920" font-size="15.5" font-weight="bold" fill="#334155">三条使用事实</text>
+  <text x="765" y="946" font-size="12.5" fill="#475569">① 无 FUSE / WinFSP / Dokan —— OS 永远看不到 viking://；访问面只有 MCP / HTTP / CLI / SDK</text>
+  <text x="765" y="970" font-size="12.5" fill="#475569">② 原件默认不保留：入库即 parse → L0/L1 → 向量（00-the-root 坑 1）</text>
+  <text x="765" y="994" font-size="12.5" fill="#475569">③ 发布面：wheel ×5 平台 · npm CLI ×5 · Docker 仅 linux/amd64+arm64；全库零 WSL 字样</text>
+
+  <text x="780" y="1080" text-anchor="middle" font-size="13" fill="#64748b">读法：Agent 的每一个「文件系统动作」都从 L1 进入，垂直穿过，只在 L5 触碰一次真实磁盘——</text>
+  <text x="780" y="1104" text-anchor="middle" font-size="13" fill="#64748b">这就是「协议级虚拟」：虚拟在命名空间，不虚拟在落盘。</text>
+  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/vfs · 基线 0f77ab56 · 锚点见 _notes/vfs-platforms-evidence.md</text>
+</svg>

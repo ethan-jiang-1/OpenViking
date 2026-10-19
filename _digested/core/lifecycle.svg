@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1190" font-family="'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC',sans-serif">
+  <rect width="1560" height="1190" fill="#fafbfc"/>
+  <text x="780" y="44" text-anchor="middle" font-size="25" font-weight="bold" fill="#0f172a">一条数据的生命周期：五段队列切开的异步主干</text>
+  <text x="780" y="72" text-anchor="middle" font-size="14" fill="#64748b">红标 = 同步/异步边界 · at-least-once 投递、无死信队列 · 记忆与资源在 Embedding 队列汇合</text>
+
+  <!-- Lane 1: sync request -->
+  <rect x="60" y="92" width="1440" height="96" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="80" y="118" font-size="14" font-weight="bold" fill="#1e3a8a">① 同步 · 请求线程</text>
+  <text x="80" y="142" font-size="12.5" fill="#475569" font-family="'SF Mono',Consolas,monospace">ov add-resource / MCP add_resource / HTTP POST /api/v1/resources</text>
+  <text x="80" y="166" font-size="12.5" fill="#475569">校验规范化 → 源固化 StagedSource（暂存 viking://temp；git 先 ls-remote 预检）→ 目标 URI 规划（冲突自增 _1.._100）→ pathlock 随消息移交</text>
+  <circle cx="1430" cy="140" r="26" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1430" y="136" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">边界①</text>
+  <text x="1430" y="150" text-anchor="middle" font-size="9" fill="#b91c1c">--wait 等</text>
+  <text x="1430" y="161" text-anchor="middle" font-size="9" fill="#b91c1c">两队列收敛</text>
+
+  <!-- Lane 2 -->
+  <rect x="60" y="204" width="1440" height="112" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="80" y="230" font-size="14" font-weight="bold" fill="#78350f">② 异步 · AddResource worker（4 并发）</text>
+  <text x="80" y="254" font-size="12.5" fill="#475569">锁接手（失败重排队 ≤2）→ UnifiedResourceProcessor：Accessor（git/web-feed/http/feishu/local）→ Parser（pdf 双策略 · markdown 切节 · anydoc 20 种 Office 扩展 · code=git 浅克隆+解析期零 LLM）</text>
+  <text x="80" y="278" font-size="12.5" fill="#475569">→ temp 树 → finalize 只产 URI 元数据 → persist_temp_tree：加密字节 cp 到正式路径 + 删 temp（媒体 parser 是 placeholder——真处理在下一站）</text>
+  <text x="80" y="302" font-size="12" fill="#92400e">图片=VLM caption（无 OCR）· 音视频=VLM media completion（无 ASR，Planned）· 失败降级空 summary</text>
+  <circle cx="1430" cy="252" r="26" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1430" y="248" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b91c1c">边界②</text>
+  <text x="1430" y="262" text-anchor="middle" font-size="9.5" fill="#b91c1c">资源可见</text>
+  <circle cx="1430" cy="296" r="20" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1430" y="292" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">边界③</text>
+  <text x="1430" y="304" text-anchor="middle" font-size="9.5" fill="#b91c1c">入 Semantic</text>
+
+  <!-- Lane 3 -->
+  <rect x="60" y="332" width="1440" height="112" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="80" y="358" font-size="14" font-weight="bold" fill="#78350f">③ 异步 · SemanticProcessor + DAG（32 并发，自底向上）</text>
+  <text x="80" y="382" font-size="12.5" fill="#475569">文件摘要 → 目录 overview → write_abstract_overview 原子写 .abstract.md / .overview.md（OKF sidecar）→ L2 在文件摘要后即时向量化</text>
+  <text x="80" y="406" font-size="12.5" fill="#475569">L0/L1 只在 sidecar body digest（sha256）变化时才重新向量化 · 增量按 changed_paths 跳过未变更文件</text>
+  <text x="80" y="430" font-size="12" fill="#92400e">这就是「mkdir 后 ls 立即可见、find 要等一会儿」的原因：可见=边界②，可被语义命中=边界④</text>
+  <circle cx="1430" cy="388" r="26" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1430" y="384" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b91c1c">边界④</text>
+  <text x="1430" y="398" text-anchor="middle" font-size="9.5" fill="#b91c1c">入 Embedding</text>
+
+  <!-- Lane 4 -->
+  <rect x="60" y="460" width="1440" height="84" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+  <text x="80" y="486" font-size="14" font-weight="bold" fill="#78350f">④ 异步 · Embedding handler（10 并发 + 熔断）</text>
+  <text x="80" y="510" font-size="12.5" fill="#475569" font-family="'SF Mono',Consolas,monospace">embed（默认 local bge-small-zh-v1.5, 512 维 GGUF）→ vector_record_id = md5(account, uri, level) → upsert</text>
+  <text x="80" y="534" font-size="12.5" fill="#475569">单一统一 collection「context」，L0/L1/L2 靠 level 字段区分 · int8 量化 flat 索引（无 HNSW）· cosine · 图片=多模态 embedding（summary+data-uri）</text>
+
+  <!-- Lane 5 retrieval -->
+  <rect x="60" y="560" width="1440" height="112" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+  <text x="80" y="586" font-size="14" font-weight="bold" fill="#14532d">⑤ 同步 · 检索（find 固定 QUICK ｜ search 配了 rerank 才 THINKING）</text>
+  <text x="80" y="610" font-size="12.5" fill="#475569">查询向量化 → QUICK：单次召回按 URI 去重（无 rerank/hotness）｜THINKING：level=[0,1] 目录命中 → rerank（文档=abstract 标量）→ dir_queue 递归</text>
+  <text x="80" y="634" font-size="12.5" fill="#475569">分数传播 α·子+(1-α)·父（可配置）· 双判停 3 轮（topk 不变且已满 / 候选池停滞）· hotness 仅 THINKING 混入 · L2 是递归终点</text>
+  <text x="80" y="658" font-size="12" fill="#166534">返回的是 L0/L1 摘要 + URI——「读全文」是 agent 的下一个显式动作（token 纪律的物理化）</text>
+
+  <!-- Lane 6 memory -->
+  <rect x="60" y="688" width="1440" height="124" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="80" y="714" font-size="14" font-weight="bold" fill="#4c1d95">⑥ 异步 · session → memory（与资源共用同一条主干）</text>
+  <text x="80" y="738" font-size="12.5" fill="#475569">commit Phase 1：pathlock 内切 archive/retain → 写 messages.jsonl + 可恢复 intent marker + ready marker（失败=failed marker+内存回滚）</text>
+  <text x="80" y="762" font-size="12.5" fill="#475569">Phase 2（8 并发，未完成 requeue）：CompressorV3 → ExtractLoop【抽取 LLM 只有 read/search/ls 三个只读工具——写入靠 LLM 输出的结构化 operations】</text>
+  <text x="80" y="786" font-size="12.5" fill="#475569">resolve_operations（isolation handler 落 URI，9 种 skip code）→ merge_op 逐字段 PATCH/REPLACE/SUM/IMMUTABLE（per-URI 先读最新）→ 写 memory 文件</text>
+  <text x="80" y="806" font-size="12" fill="#6d28d9">→ level=DETAIL 入 Embedding 队列（与资源汇合）+ 父目录 SemanticMsg（45s 去重）刷新 overview</text>
+  <text x="80" y="826" font-size="11.5" fill="#7c3aed" stroke="none">- - - 可选支线：Phase 2 还能产 skill（compressor_v3 注册表 + skill_operation_updater）· 自动 commit 由 SessionAutoCommitScheduler 每 60s 扫 .meta.json 驱动</text>
+  <circle cx="1430" cy="750" r="26" fill="#fee2e2" stroke="#dc2626" stroke-width="2"/>
+  <text x="1430" y="746" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#b91c1c">边界⑤</text>
+  <text x="1430" y="760" text-anchor="middle" font-size="9.5" fill="#b91c1c">commit 可恢复</text>
+
+  <!-- queue facts -->
+  <rect x="60" y="836" width="700" height="150" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+  <text x="80" y="862" font-size="14" font-weight="bold" fill="#334155">QueueFS 事实（脊柱）</text>
+  <text x="80" y="886" font-size="12" fill="#475569">queuefs = AGFS 插件（挂 /queue，默认 sqlite，DB 在 _system/queue/）</text>
+  <text x="80" y="908" font-size="12" fill="#475569">at-least-once：崩溃未 ack → RecoverStale 重排队 · 无死信队列</text>
+  <text x="80" y="930" font-size="12" fill="#475569">瞬时错误无限重入队：熔断（5 次/60s 复位/上限 600s）+ 45s 去重窗 + coalesce</text>
+  <text x="80" y="952" font-size="12" fill="#475569" font-family="'SF Mono',Consolas,monospace">并发：Semantic 32 · Embedding 10 · SessionCommit 8 · AddResource 4 · ExternalTask 10 · UserDel 1</text>
+  <text x="80" y="974" font-size="11.5" fill="#94a3b8">AUTH/永久错误直接丢弃记账（AUTH 不重试防死循环）· 表结构编译在 Rust 扩展内</text>
+
+  <!-- rm/mv facts -->
+  <rect x="790" y="836" width="710" height="150" rx="10" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+  <text x="810" y="862" font-size="14" font-weight="bold" fill="#9f1239">删除与移动（同步，无孤儿保证）</text>
+  <text x="810" y="886" font-size="12" fill="#475569">rm：先删向量（失败即整体中止）→ 后删文件 · 级联清理 memory 引用（grep→LLM 改写，失败不阻塞）</text>
+  <text x="810" y="908" font-size="12" fill="#475569">mv：URI 重写不重算 embedding（双向补偿回滚）· 异步部分只有父目录摘要刷新</text>
+  <text x="810" y="930" font-size="12" fill="#be123c">⚠ 唯一静默丢删点：delete(ids) 异常静默返回 0（vectordb_adapters/base.py:636-648）</text>
+  <text x="810" y="952" font-size="12" fill="#475569">无自动 GC：孤儿靠手动 reindex --mode prune_orphans · system consistency 只报不修</text>
+  <text x="810" y="974" font-size="11.5" fill="#9f1239">user 级删除 = USER_DELETION 队列分 stage（停 watch→删向量→递归 rm→oauth/audit）</text>
+
+  <text x="780" y="1030" text-anchor="middle" font-size="13" fill="#64748b">读法：同步段只有"收单 + 暂存 + 入队"；之后每一站都是独立并发的队列 worker——所以任何一站挂了，</text>
+  <text x="780" y="1056" text-anchor="middle" font-size="13" fill="#64748b">数据只是"停在上一站"，不会丢（at-least-once）——但也不会立刻可见（要走到边界②/④）。</text>
+  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/core/lifecycle.svg · 基线 0f77ab56 · 细节见 05-lifecycle-deep.md</text>
+</svg>
