@@ -34,7 +34,7 @@
   <!-- access strip -->
   <rect x="85" y="262" width="1390" height="52" rx="9" fill="#dbeafe" stroke="#2563eb"/>
   <text x="780" y="284" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#1e3a8a">接入面（全部汇合到同一个 service 实例）</text>
-  <text x="780" y="304" text-anchor="middle" font-size="12" fill="#1e40af">HTTP API（26 个 router 注册，/api/v1 为主） · MCP（15 个工具，/mcp） · WebDAV（/webdav/resources） · Bot 代理（/bot/v1，--with-bot） · 鉴权插件 5 个导入即注册（dev/api_key/trusted 无条件，oidc/ldap 条件注册）</text>
+  <text x="780" y="304" text-anchor="middle" font-size="12" fill="#1e40af">HTTP API（28 个 router 注册，/api/v1 为主） · MCP（20 个工具，/mcp） · WebDAV（/webdav/resources） · Bot 代理（/bot/v1，--with-bot） · 鉴权插件 5 个导入即注册（dev/api_key/trusted 无条件，oidc/ldap 条件注册）</text>
 
   <!-- services row -->
   <rect x="85" y="332" width="440" height="118" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
@@ -89,5 +89,5 @@
   <text x="105" y="912" font-size="12.5" fill="#7c2d12">① viking:// 不挂载进 OS（无 FUSE/WinFSP），只在 API/MCP/CLI/SDK 边界存在 ② 磁盘上是密文 + .abstract.md/.overview.md sidecar，文档类原件默认不保留（媒体类默认保留） ③ 除 5 个纯本地命令外，ov/SDK/插件全部要求 server 在跑</text>
 
   <text x="780" y="968" text-anchor="middle" font-size="13" fill="#64748b">读法：从上往下是"客户 → 入口 → 服务 → 存储"的调用方向；黄色队列把写路径的同步调用切成异步——这是"server 重启不丢任务"的原因。</text>
-  <text x="1535" y="1140" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/system-map.svg · 基线 0f77ab56 · 细节见 integration/03 与 architecture/01-02</text>
+  <text x="1535" y="1140" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/system-map.svg · 基线 v0.5.0（建档基线 0f77ab56） · 细节见 integration/03 与 architecture/01-02</text>
 </svg>

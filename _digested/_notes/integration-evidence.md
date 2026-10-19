@@ -285,7 +285,7 @@ connecting to a local server without root_api_key (dev mode)」。
 
 ## 10. 一句话结论
 
-外部 agent/宿主接入 OpenViking 共 7 条真实路径：① 直接连内置 `/mcp`（streamable HTTP，15 工具）；
+外部 agent/宿主接入 OpenViking 共 7 条真实路径：① 直接连内置 `/mcp`（streamable HTTP，20 工具）；
 ② Agent Plugins 1.0 包（stdio 代理 + skills）；③ 各 harness 专用插件（examples/，hooks 驱动）；
 ④ Python SDK `openviking-sdk`（或经 `openviking` 兼容导入）；⑤ TS / Go SDK；⑥ LangChain 包
 `langchain-openviking`；⑦ 裸 REST `/api/v1/*`（含 WebDAV、/bot/v1、OAuth）。另有运维侧的

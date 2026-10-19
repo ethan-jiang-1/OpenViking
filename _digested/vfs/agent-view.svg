@@ -76,9 +76,9 @@
 
   <!-- Bottom: boundary strip -->
   <rect x="55" y="700" width="1390" height="92" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-dasharray="6 4"/>
-  <text x="750" y="734" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#334155">接入边界：MCP（15 工具）· HTTP API · ov CLI · SDK —— Agent 不经过 OS，OS 也看不到 viking://（无 FUSE / WinFSP 挂载）</text>
+  <text x="750" y="734" text-anchor="middle" font-size="14.5" font-weight="bold" fill="#334155">接入边界：MCP（20 工具）· HTTP API · ov CLI · SDK —— Agent 不经过 OS，OS 也看不到 viking://（无 FUSE / WinFSP 挂载）</text>
   <text x="750" y="766" text-anchor="middle" font-size="13.5" fill="#475569">文件系统示能（路径 ＋ 目录 ＋ 读取语义）× 数据库语义（ACL · 快照 · 向量 · 加密）= Agent 以为的「文件系统」</text>
 
   <text x="750" y="840" text-anchor="middle" font-size="12" fill="#94a3b8">陷阱提醒：find 不是按名字找文件（是语义检索）；append_file 是锁下整写重写；chmod 底层 no-op（权限只有 ACL）——详见 03-operation-semantics.md</text>
-  <text x="1490" y="915" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/vfs · 基线 0f77ab56</text>
+  <text x="1490" y="915" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/vfs · 基线 v0.5.0（建档基线 0f77ab56）</text>
 </svg>

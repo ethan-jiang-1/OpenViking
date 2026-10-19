@@ -11,7 +11,7 @@
 
   <!-- Access boundary -->
   <rect x="80" y="92" width="980" height="36" rx="8" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4"/>
-  <text x="570" y="115" text-anchor="middle" font-size="13.5" fill="#334155">接入边界：Agent / 宿主 ── MCP（15 工具）· HTTP API · ov CLI · SDK ── 全部走 server 进程，不经过 OS</text>
+  <text x="570" y="115" text-anchor="middle" font-size="13.5" fill="#334155">接入边界：Agent / 宿主 ── MCP（20 工具）· HTTP API · ov CLI · SDK ── 全部走 server 进程，不经过 OS</text>
 
   <!-- L1 -->
   <rect x="80" y="150" width="980" height="96" rx="12" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
@@ -120,5 +120,5 @@
 
   <text x="780" y="1080" text-anchor="middle" font-size="13" fill="#64748b">读法：Agent 的每一个「文件系统动作」都从 L1 进入，垂直穿过，只在 L5 触碰一次真实磁盘——</text>
   <text x="780" y="1104" text-anchor="middle" font-size="13" fill="#64748b">这就是「协议级虚拟」：虚拟在命名空间，不虚拟在落盘。</text>
-  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/vfs · 基线 0f77ab56 · 锚点见 _notes/vfs-platforms-evidence.md</text>
+  <text x="1535" y="1170" text-anchor="end" font-size="10.5" fill="#cbd5e1">_digested/vfs · 基线 v0.5.0（建档基线 0f77ab56） · 锚点见 _notes/vfs-platforms-evidence.md</text>
 </svg>

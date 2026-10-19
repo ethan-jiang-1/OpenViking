@@ -46,7 +46,7 @@ grep / grep_file / glob_directory / tree_directory
 ### 1. shell 命令够不着（不是权限问题，是存在性问题）
 
 - 无 FUSE/WinFSP/Dokan——`viking://` 不挂载进 OS。`ls/cat/find/rsync/du` 没有可操作的对象。
-- 访问面只有四条：MCP 15 工具 / HTTP API / `ov` CLI / SDK（[`integration/01`](../integration/01-start-here.md)）。
+- 访问面只有四条：MCP 20 工具 / HTTP API / `ov` CLI / SDK（[`integration/01`](../integration/01-start-here.md)）。
 - 即便绕过协议直读磁盘 `{workspace}/viking`：内容**按 account_id 加密**（HKDF 派生，`crypto/mod.rs:44-49`）+ 文档类原件默认不保留（媒体类默认保留原件，[00-the-root](../00-the-root.md) 坑 1），`cat` 出来是密文和 sidecar。
 
 ### 2. 同名不同义（coreutils 直觉迁移陷阱）
