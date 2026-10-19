@@ -81,7 +81,7 @@
 - **矛盾点**：pyproject.toml:256 `addopts = "-v --cov=openviking --cov-report=term-missing"` 强制覆盖率插件；[dependency-groups].dev 只装 pytest>=9.0.2（pyproject.toml:296–298），pytest-cov 在 [project.optional-dependencies].test 里（pytest>=7，:99–103）。即 `uv sync` 后直接 `uv run pytest` 会因缺 pytest-cov 失败，必须 `--extra test`。CONTRIBUTING.md:48 用的是 `uv sync --all-extras` 所以能跑，但这是配置内部的不一致。【硬事实】
 - tests/transaction/ 只有 __init__.py + conftest.py，无实际测试文件；tests/engine/ 只有 C++ 测试且 CI 不跑（见 A1）。【硬事实】
 
-【解释】655 个测试文件、跳过必须有 reason、marker 有声明——测试侧的纪律不差；问题在 A1 所述：这些测试大部分只有贡献者本地跑，CI 不兜底。与 CONTRIBUTING "默认不加新单测"的哲学合起来看，是"契约优先、少测试、本地验证"的一贯风格，但对外部贡献者和 AI agent 来说门槛更高（需要自觉）。
+【解释】**730** 个测试文件（v0.4.19 时为 655）、跳过必须有 reason、marker 有声明——测试侧的纪律不差；问题在 A1 所述：这些测试大部分只有贡献者本地跑，CI 不兜底。与 CONTRIBUTING "默认不加新单测"的哲学合起来看，是"契约优先、少测试、本地验证"的一贯风格，但对外部贡献者和 AI agent 来说门槛更高（需要自觉）。
 
 ### A5. 版本与发布
 
