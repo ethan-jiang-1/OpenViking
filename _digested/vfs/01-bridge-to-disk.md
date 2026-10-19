@@ -50,6 +50,13 @@ L5  OS 边界       base_path\acct\docs\f.txt          Rust    唯一接触 NTFS
 
 - 挂载表：local backend 时 localfs 插件挂到 AGFS 路径 `/local`（`openviking/utils/agfs_utils.py:338`）；s3/mem 同理。`crates/ragfs/src/multibackend/factory.rs` 负责装配与加密封装（`supports_encrypted_publish` 只认 localfs/s3fs/memfs，:30-33）。
 - **PathLock 打穿 Rust**（`storage/transaction/__init__.py:1-8` docstring 原话）：实现是锁 token 侧车文件方案，与平台无关——目录锁 `{dir}/.path.ovlock`、文件锁 `{parent}/.exact.ovlock.<safe_name>.<sha1-16>`（`crates/ragfs/src/lock/resolver.rs:88-103`），token 纯文本 `owner_id:time_ns:lock_type`（`lock/codec.rs:12`），原子性靠"存在即失败"的 create + CAS（`lock/provider.rs:28-38`），**活性靠 TTL 过期回收而非 OS 锁生命周期**（`lock/manager.rs:675-677`）。持有者崩溃后其他写者最长被阻塞 `lock_expire_secs`——三平台一致。
+  - ⚠️ **v0.5.0 起上述描述只对 `provider="filesystem"`（默认）成立**。锁后端变成了三选一（`openviking_cli/utils/config/agfs_config.py:308-348`）：
+    | provider | 实现在哪 | 原子性 / 活性 |
+    |---|---|---|
+    | `filesystem`（默认） | `lock/provider.rs:249 FilesystemPathLockProvider` | 侧车文件 create+CAS / 空 token 按 `lock_expire_secs` 回收 |
+    | `memory` | `lock/provider.rs:139 MemoryPathLockProvider` | 进程内，不跨进程 |
+    | `cache`（**v0.5.0 新增**，Redis） | `lock/cache_provder.rs:443 RedisPathLockProvider` | **Lua 脚本原子执行**（`pathlock.acquire_batch.v1` / `compare_write.v1` / `scan_descendants.v1` 等 9 个脚本 id）/ Redis `PEXPIRE` 为权威 TTL（`cache_provder.rs:254,311`），另设 hash 兜底 TTL = `2 × lock_expire_secs`（`:471`） |
+    `cache` 的意义是**让锁跨机器**：多实例部署共用一套 Redis 时，侧车文件那套"本地文件系统是唯一真相"的前提不再成立。代价是多一条 Redis 依赖，且 `namespace` 必填（限 ASCII 字母数字与 `._-`）——不同 OpenViking 实例靠它隔离锁域。
 - **加密打穿 Rust**：密钥按 account_id 经 HKDF-SHA256 派生（`crates/ragfs/src/crypto/mod.rs:44-49`，逐字节镜像 Python 实现）；写路径 = 确定性 `.encrypt` 临时文件 + `replace()` 覆盖式移动（`core/encryption_wrapper.rs:334-447`）。
 
 ### L4 后端插件层

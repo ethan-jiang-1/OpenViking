@@ -64,7 +64,7 @@ grep / grep_file / glob_directory / tree_directory
 
 - **symlink/hardlink**：ragfs 全仓 0 处使用（不创建不依赖链接；Windows junction 也不特殊处理）。
 - **chmod**：Rust trait 有、Python 未暴露、localfs 实现**是 no-op**（`mod.rs:1257-1268`）——权限模型事实上只有 URI 层 ACL（owner_user_id / actor_peer_id 校验，`namespace.py:323-345`），不是 mode bits。
-- **byte-range 文件锁（fcntl/flock 语义）**：不存在；锁是应用层 PathLock（token 侧车文件 + TTL，[`01`](01-bridge-to-disk.md)）。
+- **byte-range 文件锁（fcntl/flock 语义）**：不存在；锁是应用层 PathLock——`filesystem`/`memory` 后端是 token 侧车文件 + TTL，`cache` 后端（v0.5.0 新增）是 Redis Lua 脚本 + `PEXPIRE`（[`01`](01-bridge-to-disk.md)）。两种后端都**不支持**对一个文件的区间加锁。
 - **mmap / fifo / 设备文件 / mount**：概念不存在。
 
 ## 写作/使用纪律（从上述事实推出的操作建议）

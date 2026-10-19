@@ -30,6 +30,7 @@
 | CAS 文件身份 | dev + ino | dev + ino | 卷序列号 + 64 位 FileIndex（Win32 句柄） |
 | 文件锁 | filelocks Fcntl（OFD） | 同 | 同 crate 映射 `LockFileEx` |
 | PathLock 语义 | token 侧车文件 + TTL（与平台无关） | 同 | 同 |
+| PathLock 后端 | `filesystem`（默认）/ `memory` / `cache`（**Redis，v0.5.0 新增**，三平台同） | 同 | 同 |
 | `rename()` 目标已存在 | **静默覆盖** | 静默覆盖 | **报错**（平台语义分裂点） |
 | 大小写敏感 | 敏感（ext4 默认） | **不敏感**（APFS 默认） | **不敏感**（NTFS 默认） |
 | chmod | 真实生效 | 生效 | **no-op**（`mod.rs:1257-1268`） |
