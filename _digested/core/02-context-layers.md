@@ -4,7 +4,7 @@
 
 ## 先给结论
 
-L0（一句话摘要）/ L1（概览）/ L2（全文）不是文档修辞，而是一套**物理机制**：每个上下文对象在向量库里按 level 存三条记录，目录以 `.abstract.md` / `.overview.md` sidecar 文件承载 L0/L1，sidecar 是 **OKF 格式（YAML frontmatter + body）**，metadata 有写保护。设计稿（`docs/design/l0-l1-okf-sidecars-rfc.md`，仍标 Draft）与实现**高度同步**——RFC 的存储格式与读路径已落地，但 freshness 父冒泡属于 Future Work、只是部分实现。
+L0（一句话摘要）/ L1（概览）/ L2（全文）不是文档修辞，而是一套**物理机制**：每个上下文对象在向量库里按 level 存三条记录，目录以 `.abstract.md` / `.overview.md` sidecar 文件承载 L0/L1，sidecar 是 **OKF 格式（YAML frontmatter + body）**，metadata 有写保护。设计稿（~~`docs/design/l0-l1-okf-sidecars-rfc.md`~~，当时仍标 Draft）与实现**高度同步**——RFC 的存储格式与读路径已落地，但 freshness 父冒泡属于 Future Work、只是部分实现。
 >
 > **v0.5.0 的两处口径修正**：① `docs/design/` 目录已从 upstream 删除，该 RFC 只剩**搬迁前旧分支里的副本**（`backup/ethan-before-v050`；搬迁到 v0.5.0 之后工作树里也没有了）；② "L0/L1 分层是两级检索的物理前提"这句**作废**——两级递归没了，level 现在是索引过滤条件（见下）。
 
@@ -34,6 +34,8 @@ L0（一句话摘要）/ L1（概览）/ L2（全文）不是文档修辞，而�
 - metadata **默认不进** embedding，但**有一个白名单例外**：`EMBEDDING_METADATA_FIELDS = ("directory",)`（`:30`）——`body_for_embedding()` / `embedding_text_for_body()`（`:456-474` / `:477-480`）会把 `directory` 拼回 frontmatter 送进 embedding。**这条例外在 v0.4.19 就存在**，旧文写成"metadata 一律不进"是**基线就错**
 
 ## 设计稿 vs 已实现（对照 RFC）
+
+> ⚠️ **该 RFC 已随 v0.5.0 删除**：`docs/design/` 整目录不复存在，`git ls-tree -r v0.5.0 -- docs/design/` 零命中。下表是**对着旧基线分支做的对照**，状态列描述的是「当时的设计稿 vs 当时的代码」，其中"已实现"条目已按 v0.5.0 锚点重新核对过（见各格），但 **RFC 侧的行号引用无法再在主线树里验证**——如需溯回，副本在 `backup/ethan-before-v050`。
 
 | RFC 内容 | 状态 | 证据 |
 |---|---|---|

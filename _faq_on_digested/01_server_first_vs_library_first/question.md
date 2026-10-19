@@ -16,6 +16,6 @@
 
 ## 证据边界
 
-- **pi 侧**：只引用 pi-mono 仓库 `_digested/`（v0.85.1 基线）的结论：`integration/01-start-here.md`（SDK/RPC 两路径、无 HTTP server）、`integration/06-coverage-and-parity.md`（protocol/client/server 第三条路径 dev-only）、`integration/07-chord-and-facets.md`。**不做 pi 源码的新审计。**
+- **pi 侧**：只引用 pi-mono 仓库 `_digested/`（v0.85.1 基线）的结论：`integration/01-start-here.md`（SDK/RPC 两路径、无 HTTP server）、~~`integration/06-coverage-and-parity.md`~~（protocol/client/server 第三条路径 dev-only）、~~`integration/07-chord-and-facets.md`~~。**不做 pi 源码的新审计。**
 - **OpenViking 侧**：引用本仓库 `_digested/integration/01-start-here.md`、`_digested/architecture/01-three-languages.md`、`_digested/_notes/integration-evidence.md`（`0f77ab56` 基线）。
 - 只做"消化材料→判断"的综合，不引入两边材料之外的新断言。

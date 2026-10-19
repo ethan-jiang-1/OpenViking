@@ -41,7 +41,7 @@ pi 和 OpenViking 各自都是这个判据的自洽实现——真正不该学�
 
 ## 引用
 
-- pi 侧：`pi-mono/_digested/integration/01-start-here.md`（"pi-mono 没有 HTTP server"）、`06-coverage-and-parity.md`（三件套 dev-only）、`07-chord-and-facets.md`（chord 重建），基线 v0.85.1
+- pi 侧：~~`pi-mono/_digested/integration/01-start-here.md`~~（"pi-mono 没有 HTTP server"）、~~`06-coverage-and-parity.md`~~（三件套 dev-only）、~~`07-chord-and-facets.md`~~（chord 重建），基线 v0.85.1
 - OpenViking 侧：`_digested/integration/01-start-here.md`（~~六种~~ **七种**接入形态 + server-first 结论；"七条"是 integration-evidence §10 按 wire-path 的细分口径，两套分类学勿混）、`_digested/architecture/01-three-languages.md`（三原生层）、`_digested/_notes/integration-evidence.md` §9（反直觉事实清单），基线 `0f77ab56`
 
 ---

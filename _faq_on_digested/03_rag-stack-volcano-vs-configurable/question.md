@@ -14,5 +14,5 @@
 ## 证据边界
 
 - **源码**：只引用本仓库 `openviking/`、`openviking_cli/` 的配置与实现文件（基线 `0f77ab56`；本次取证所涉关键文件 `_grep.py` / `embedding_config.py` / `rerank_config.py` / `vectordb_adapters/*` / `docs/en/guides/01-configuration.md` 在该基线到 HEAD `57571ca9` 之间无 diff，锚点可视为基线有效）。
-- **消化材料**：`_digested/_notes/seams-boundaries-evidence.md`（provider 接缝）、`_digested/core/03-retrieval-global-recall.md`（QUICK/THINKING；该篇 v0.5.0 由 `03-retrieval-two-levels.md` 更名而来）、`_digested/architecture/01-three-languages.md`（向量引擎分层）。
+- **消化材料**：`_digested/_notes/seams-boundaries-evidence.md`（provider 接缝）、`_digested/core/03-retrieval-global-recall.md`（QUICK/THINKING；该篇 v0.5.0 由 ~~`03-retrieval-two-levels.md`~~ 更名而来）、`_digested/architecture/01-three-languages.md`（向量引擎分层）。
 - **不做**：不审计第三方 SDK（vikingdb/cohere/openai 库）内部实现，只以 OpenViking 侧配置面与调用点为据。

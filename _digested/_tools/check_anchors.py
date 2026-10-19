@@ -37,19 +37,33 @@ SKIP_DOCS = ("_digested/_tools/",)
 
 # `foo.py:12`, `foo.py:12-34`, `foo.py:12,34`
 ANCHOR_RE = re.compile(
-    r"`([A-Za-z0-9_\-/\.]+\.(?:py|rs|cpp|h|hpp|toml|json|mjs|js|ts|tsx|sh|sql))"
+    r"`([A-Za-z0-9_\-/.]+\.(?:py|rs|cpp|h|hpp|toml|json|mjs|js|ts|tsx|sh|sql))"
     r":([0-9]+)(?:[-,]\s*([0-9]+))?`"
+)
+
+# `foo.py` with NO `:line` suffix. The main check above only sees cited
+# anchors, so a wrong path written without a line number was invisible --
+# `skills/openviking-memory/SKILL.md` passed for weeks while the real file
+# is `agent-plugins/skills/openviking-memory/SKILL.md`. Bare paths get the
+# NOFILE / BADPATH treatment, just no line validation.
+BARE_PATH_RE = re.compile(
+    r"`([A-Za-z0-9_-][A-Za-z0-9_/.-]*\.(?:py|rs|cpp|h|hpp|toml|json|mjs|js|ts|tsx|sh|sql|md))`"
 )
 
 # A line carrying any of these is a tombstone, not a live claim.
 TOMBSTONE_MARKERS = ("~~", "旧基线", "已删除", "被删", "不存在",
-                     "旧锚点", "已缩到", "旧分支")
+                     "旧锚点", "已缩到", "旧分支", "非死锚", "零命中",
+                     "已随", "已腐化")
 
 SOURCE_EXTS = (".py", ".rs", ".cpp", ".h", ".hpp", ".toml", ".json",
                ".mjs", ".js", ".ts", ".tsx", ".sh", ".sql")
 
 SKIP_DIR_PARTS = ("/.git", "node_modules", "/build", "/dist", "/target",
-                  "/_digested", "/_faq_on_digested", "/.venv", "/__pycache__")
+                  "/.venv", "/__pycache__")
+# The digest trees hold the docs themselves; they are excluded from the
+# *anchor* index (a doc must not cite itself) but the bare-path check needs
+# them so that `answer.md`, `research.md` and `_digested/core/...` resolve.
+DOC_TREE_PARTS = ("/_digested", "/_faq_on_digested")
 
 
 def build_index():
@@ -59,8 +73,9 @@ def build_index():
         rel_root = "/" + os.path.relpath(root, REPO).replace(os.sep, "/")
         if any(part in rel_root for part in SKIP_DIR_PARTS):
             continue
+        in_doc_tree = any(part in rel_root for part in DOC_TREE_PARTS)
         for name in files:
-            if not name.endswith(SOURCE_EXTS):
+            if not name.endswith(SOURCE_EXTS + (".md",)):
                 continue
             path = os.path.join(root, name)
             rel = os.path.relpath(path, REPO)
@@ -129,8 +144,38 @@ def check(strict):
                          "OOB (longest %s has %d lines)" % (longest[0], longest[1]))
                     )
 
+                # Bare paths: existence and directory-tail only.
+                for match in BARE_PATH_RE.finditer(line):
+                    cited = match.group(1)
+                    # Skip only when THIS path is cited with a line number
+                    # elsewhere on the line; that form is validated above.
+                    if re.search(r"`" + re.escape(cited) + r":\d", line):
+                        continue
+                    stats["bare_total"] += 1
+                    base = os.path.basename(cited)
+                    candidates = index.get(base, [])
+                    if not candidates:
+                        stats["bare_nofile"] += 1
+                        findings.append((rel_doc, lineno, cited, 0, "NOFILE (bare path)"))
+                        continue
+                    if "/" in cited:
+                        tail = cited.lstrip("./")
+                        exact = [c for c in candidates
+                                 if ("/" + c[0].replace(os.sep, "/").lstrip("./")).endswith("/" + tail)]
+                        if not exact:
+                            stats["bare_badpath"] += 1
+                            findings.append(
+                                (rel_doc, lineno, cited, 0,
+                                 "BADPATH (bare; no file ends with %s; basename at %s)"
+                                 % (tail, ", ".join(c[0] for c in candidates[:2])))
+                            )
+                            continue
+                    stats["bare_ok"] += 1
+
     print("scanned %d docs" % len(docs))
-    for key in ("total", "ok", "oob", "nofile", "badpath", "skipped_tombstone"):
+    for key in ("total", "ok", "oob", "nofile", "badpath",
+                "bare_total", "bare_ok", "bare_nofile", "bare_badpath",
+                "skipped_tombstone"):
         print("  %-18s %d" % (key, stats[key]))
 
     if findings:

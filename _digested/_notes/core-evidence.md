@@ -87,7 +87,7 @@
 
 ### 2.4 设计稿 vs 已实现【硬事实 + 解释】
 
-对照 `docs/design/l0-l1-okf-sidecars-rfc.md`：
+对照 ~~`docs/design/l0-l1-okf-sidecars-rfc.md`~~：
 
 - RFC 提案（RFC Summary 行 7-22）将 `.abstract.md`/`.overview.md` 升级为 OKF 格式（YAML frontmatter + body）。**已实现**：`parse_abstract_overview`/`render_abstract_overview`/`_normalize_metadata`（abstract_overview.py:92-135 规范化 directory/source/generated_by/freshness 四组字段）与 RFC "Metadata Fields" 一一对应。
 - RFC Goals「metadata 对 embedding 默认排除」→ 实现于 `abstract_overview.py:358-384` `body_for_embedding()`/`embedding_text_for_body()`。

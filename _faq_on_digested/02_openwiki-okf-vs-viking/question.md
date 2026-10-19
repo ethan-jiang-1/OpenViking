@@ -18,6 +18,6 @@
 
 ## 证据边界
 
-- **OpenViking 侧**：`_digested/`（`00-the-root` / `core/01-04` / `integration/01-02`）+ 源码 `docs/design/l0-l1-okf-sidecars-rfc.md`、`openviking/storage/abstract_overview.py`（基线 `0f77ab56`）。
+- **OpenViking 侧**：`_digested/`（`00-the-root` / `core/01-04` / `integration/01-02`）+ 源码 ~~`docs/design/l0-l1-okf-sidecars-rfc.md`~~、`openviking/storage/abstract_overview.py`（基线 `0f77ab56`）。
 - **OpenWiki 侧**：仅依据其官方 README（GitHub raw，2026-09 抓取）与 OKF spec 链接，**未做源码审计**。
 - 本问题涉及外部项目，凡引用 OpenWiki 行为均标【外部事实】；凡涉及两格式同源性的判断均标【解释/未定】。

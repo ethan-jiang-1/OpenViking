@@ -74,5 +74,5 @@ QueueFS 挂载在 AGFS `/queue`（挂载点解析 `agfs_utils.py:215-245 resolve
 
 - 硬事实：全部锚点（含 agent 第一手取证段）
 - 解释：队列是脊柱的定性；"mkdir 后 find 找不到是设计"；leveldb/RocksDB 命名漂移的判断（`stale_lock.py` 清的是 leveldb 的 LOCK，RocksDB 是遗留名）；upstream 为何在 v0.5.0 放弃破坏性 reindex 模式——**未取官方说明**
-- 反转记录（2026-10-19，v0.5.0）：`semantic_dag.py` 删除；队列 7→8；队列完成语义重定义；原"修正 1/2/3"整体作废；`prune_orphans` 删除；`user_deletion.py` → `deletion.py`
+- 反转记录（2026-10-19，v0.5.0）：~~`semantic_dag.py`~~ 删除；队列 7→8；队列完成语义重定义；原"修正 1/2/3"整体作废；`prune_orphans` 删除；~~`user_deletion.py`~~ → `deletion.py`
 - 未定：queuefs sqlite 表结构（在 Rust 扩展内）；IndexEngine 内部并发扫描细节

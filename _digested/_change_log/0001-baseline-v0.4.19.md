@@ -7,7 +7,7 @@
 **仓库总 commit 数**: 2341
 **参考版本口径**: release tag 最新为 **v0.4.19**（2026-09-08，`f3afef11`，共 64 个 v* tag）；README 自述的 "OpenViking 0.3.22 has been evaluated on ..." 是 benchmark 报告口径，明显滞后于 release tag——引用版本号时先说清用的是哪个口径（pyproject 用 dynamic version）
 
-> **口径修正（2026-09-12）**：本记录最初依据 `git ls-remote --tags origin` 写成"upstream 不打 tag"——错在查了 fork（origin）而不是 upstream，且文件名原为 `0001-baseline-v0.3.22.md`。fetch upstream 后核实：upstream 有 64 个版本 tag。教训记入方法论：**核实事实要查权威源头本身，不能查它的副本。**
+> **口径修正（2026-09-12）**：本记录最初依据 `git ls-remote --tags origin` 写成"upstream 不打 tag"——错在查了 fork（origin）而不是 upstream，且文件名原为 ~~`0001-baseline-v0.3.22.md`~~。fetch upstream 后核实：upstream 有 64 个版本 tag。教训记入方法论：**核实事实要查权威源头本身，不能查它的副本。**
 
 ## 这不是一次 sync
 
@@ -33,7 +33,7 @@
 
 `docs/en/concepts/` 16 篇（2026-09-13 修正：建档时写 15 篇，实数 16 个 md 文件——`15-acl.md` 与 `15-vikingbot.md` 同占用 15 号，按文件数计 16）：architecture、context-types、context-layers（L0/L1/L2）、viking-uri、storage、extraction、retrieval、session、transaction、encryption、multi-tenant、metrics、privacy、multi-write-storage、acl、vikingbot；另有 `agent-integrations/`、`api/`、`configuration/`、`context-compilation/`、`guides/`。
 
-`docs/design/` 存有设计稿（`l0-l1-okf-sidecars-rfc.md`、`git-version-control-design.md`、`memory-link-design.md`、`mcp-oauth2-1.md` 等）——**注意**：design 目录是设计稿，引用时须区分"规格"与"已实现现状"（pi-mono 的 `facets.md` 教训）。
+`docs/design/` 存有设计稿（~~`l0-l1-okf-sidecars-rfc.md`~~、~~`git-version-control-design.md`~~、~~`memory-link-design.md`~~、~~`mcp-oauth2-1.md`~~ 等）——**注意**：design 目录是设计稿，引用时须区分"规格"与"已实现现状"（pi-mono 的 ~~`facets.md`~~ 教训）。
 
 ### 已知问题
 
