@@ -67,6 +67,31 @@ RETRACT_MARKERS = (
 SCAN_GLOBS = ("_digested/**/*.md", "_faq_on_digested/**/*.md")
 
 
+def check_empty_status():
+    """状态标注 是空的 —— 这是比内容错位更糟的形态。
+
+    README 规定它是读者判断"这段能不能信"的唯一入口，且永远最后一章。
+    一个空的状态标注读起来像"无话可说"，是一个比原本内容更强的错误断言。
+    """
+    import os
+    bad = []
+    for f in glob.glob("_digested/**/*.md", recursive=True):
+        base = os.path.basename(f)
+        if base == "README.md" or any(x in f for x in ("_change_log", "_notes", "_tools")):
+            continue
+        try:
+            lines = io.open(f, encoding="utf-8").read().splitlines()
+        except OSError:
+            continue
+        for i, line in enumerate(lines):
+            if line.startswith("## 状态标注"):
+                body = [l for l in lines[i + 1:] if l.strip()]
+                if not body:
+                    bad.append((f, i + 1))
+                break
+    return bad
+
+
 def scan(phrases, quiet=False):
     files = []
     for g in SCAN_GLOBS:
@@ -114,6 +139,16 @@ def main():
     phrases = args.phrases or KNOWN_RETRACTED
     print(f"扫 {len(phrases)} 个短语，范围 {', '.join(SCAN_GLOBS)}")
     n = scan(phrases, quiet=args.quiet)
+
+    empties = check_empty_status()
+    if empties:
+        print(f"\n[{len(empties)} 处空的状态标注] 这是读者判断可信度的唯一入口，空壳等于断言'无话可说'")
+        for f, ln in empties:
+            print(f"   {f}:{ln}")
+        n += len(empties)
+    elif not args.quiet:
+        print("[clean] 无空的状态标注")
+
     print()
     if n:
         print(f"⚠️  {n} 处未标注残留——逐条确认是真残留还是误报（引述别人错误的行是误报）")
