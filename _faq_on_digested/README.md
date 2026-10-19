@@ -25,9 +25,15 @@
 _faq_on_digested/
 ├── README.md
 └── <NN_question-slug>/
-    ├── question.md        # 问题描述 + 背景 + 证据边界
-    └── answer.md          # 答案 / 分析 / 结论
+    ├── question.md        # 问题描述 + 背景 + 证据边界（必有）
+    ├── answer.md          # 答案 / 分析 / 结论（必有）
+    ├── research.md        # 可选：原始研究过程，比 answer 粗糙，04 有
+    ├── README.md          # 可选：问题本身需要多篇子文档时作导航，05 有
+    ├── scenarios/         # 可选：05 的场景化展开
+    └── _raw/              # 可选：原始素材，04 有
 ```
+
+> 上面标"可选"的三项目前只有 04、05 用到，**不是所有问题都必须有**——`question.md` + `answer.md` 是唯一硬约定。
 
 ## 命名约定
 
