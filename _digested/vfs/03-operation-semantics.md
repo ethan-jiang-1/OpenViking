@@ -58,7 +58,7 @@ grep / grep_file / glob_directory / tree_directory
 | `append_file` | O_APPEND 原子追加 | pathlock 租约下**读旧+整文件重写**（注释原话 "avoid lost updates"） | `_ops.py:2116` |
 | `mkdir` | 建空容器 | 目录是**数据记录**（L0/L1 文案 + 向量） | [`core/01`](../core/01-viking-uri-and-vfs.md) |
 | `ls` | 全列 | ACL 过滤，无权限条目标 `access: "denied"` 保留可见 | `_access.py:600-605` |
-| `grep` | 文本搜索 | 正则内容搜索 + ACL 过滤 + rg fallback（生产代码跨平台，单测 unix-only） | `_grep.py:25`、`localfs/mod.rs:66-72` |
+| `grep` | 文本搜索 | 正则内容搜索 + ACL 过滤（**v0.5.0 起不再调外部 ripgrep**，见下） | `_grep.py:25`、`localfs/mod.rs:418 grep_via_libs`、`:550 grep_file_via_searcher` |
 
 ### 3. POSIX 暗面不存在
 
@@ -78,3 +78,18 @@ grep / grep_file / glob_directory / tree_directory
 
 - 硬事实：动词表锚点、no-op chmod、append 重写、find 固定 QUICK
 - 解释："文件系统接口形状的数据库 API"定性；操作建议（写作纪律）
+
+## v0.5.0 复核：grep 的外部依赖被拆掉了（2026-10-19）
+
+原文这一行写的是"正则内容搜索 + ACL 过滤 + **rg fallback**"，锚在 `localfs/mod.rs:66-72`——那一段是构造时探测 `rg` 是否在 PATH 里（`Command::new("rg").arg("--version")`，结果存进 `has_rg` 字段），有就走 `grep_via_rg`（`Command::new("rg").arg("--json")` 子进程），没有才退回进程内实现。
+
+**v0.5.0 把整条外部路径删了**：
+
+| | v0.4.19（基线） | v0.5.0 |
+|---|---|---|
+| `has_rg` 字段与探测 | 有（`mod.rs:66-72`） | **无** |
+| `grep_via_rg`（spawn 子进程） | 有（`mod.rs:364`） | **无**，全文件已无 `Command::new` |
+| 进程内实现 | `grep_via_libs`（`mod.rs:561`）作为回退 | 唯一路径（`:418`），上下文收集抽到新模块 `core/grep.rs` |
+| 上下文行（before/after context） | — | 新增 `GrepLineCollector`（`core/grep.rs:8`），含相邻命中与文件边界的处理 |
+
+**判断**：这是一次**去外部依赖**的收敛——行为等价面更大（不再受"宿主机有没有装 rg"影响，三平台表现更一致），代价是丢掉 rg 的 SIMD 优化，大仓库 grep 可能变慢。文档原来那句"生产代码跨平台"的方向反而更成立了，但依据换了。

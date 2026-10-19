@@ -57,7 +57,7 @@ Python 侧还有一处容易被忽略的 Windows 专属代码：`process_lock.py
 ### 3. 数据落点与长路径
 
 - 默认数据目录 `Path.home() / ".openviking"`（`consts.py:7`）→ Windows 上即 `C:\Users\<user>\.openviking\<workspace>\viking\...`。
-- 长路径能力来自 `fs::canonicalize` 的 `\\?\` verbatim 副作用（`mod.rs:63`），非显式设计。【解释】"能用但隐式"：行为依赖 std 实现细节，且日志/报错里的 `\\?\` 前缀可能困扰用户和外部工具。
+- 长路径能力来自 `fs::canonicalize` 的 `\\?\` verbatim 副作用（`mod.rs:124`），非显式设计。【解释】"能用但隐式"：行为依赖 std 实现细节，且日志/报错里的 `\\?\` 前缀可能困扰用户和外部工具。
 
 ### 4. 文档口径与全库零 WSL
 
@@ -67,15 +67,15 @@ Quickstart 明文三 OS（`docs/en/getting-started/02-quickstart.md:10`，中文
 
 | # | 风险 | 锚点 | 影响 |
 |---|---|---|---|
-| 1 | `rename()` 目标存在：Windows 报错 / Unix 覆盖——同一 VFS 操作两平台结果不同 | `mod.rs:1171` vs `:1248-1252` | 依赖覆盖语义的上层在 Windows 会见错；应走 `replace()` |
+| 1 | `rename()` 目标存在：Windows 报错 / Unix 覆盖——同一 VFS 操作两平台结果不同 | `mod.rs:1014 async fn rename`；Windows 分支 `:1073-1097` 用 `MoveFileExW(MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)`（旧基线锚 `:1171` vs `:1248-1252` 已因重写失效） | 依赖覆盖语义的上层在 Windows 会见错；应走 `replace()` |
 | 2 | 大小写冲突零防护：`A.txt` vs `a.txt` 在 NTFS/APFS 上截断覆盖同一文件、ext4 上共存 | 全仓无 casefold 处理（evidence §2.4） | **macOS 与 Windows 共有**；VFS 层不救 |
 | 3 | Windows 保留名/非法字符零防护：URI 组件 `CON`/`NUL` 落 NTFS 有设备语义 | 无处理代码 | 路径注入残余面（`_safe_uri_parts` 只挡 `\` 和 `X:`） |
-| 4 | `chmod` 是 no-op（"For now, just return success"） | `mod.rs:1257-1268` | 权限模型事实上只有 URI 层 ACL；别指望 POSIX 权限位 |
+| 4 | `chmod` 是 no-op（"For now, just return success"） | `mod.rs:1117 async fn chmod`（旧基线 `:1257-1268` 已因重写失效） | 权限模型事实上只有 URI 层 ACL；别指望 POSIX 权限位 |
 | 5 | 密钥/配置文件 0600 仅 unix；Windows 无 ACL 收紧且仍打印误导性 "Key permissions set to 0600" | `ov_cli/commands/crypto.rs:92-96,99`、`crypto/config.py:73` | Windows 上同用户进程皆可读 master key |
 | 6 | 加密写 `.encrypt` 临时名确定性（sha256(final_path)）；PathLock 禁用时 `remove+retry` 互删 envelope → last-writer-wins | `encryption_wrapper.rs:197-206,261-269` | 启用锁则安全；绕锁写是竞态 |
 | 7 | 虚拟路径校验平台不对称：`\` 在 Windows 是分隔符、Unix 是合法文件名；`Component::Prefix` 检查仅 Windows 编译目标命中 | `core/filesystem.rs:20-28` | 跨平台数据迁移时同名路径可能落到不同文件 |
 | 8 | Rust 原生单测不进 CI（全 workflows 无 `cargo test`）；`_test_full.yml` 是空壳（无 pytest 步骤、无调用方） | workflows grep；`_test_full.yml:34,79-82` | Windows 专属 Rust 代码靠 Python 集成测试间接覆盖 |
-| 9 | 普通写入就地写无 temp+rename，崩溃可留半截文件 | `mod.rs:1010-1043` | 三平台一致，加密路径除外（有 replace） |
+| 9 | 普通写入就地写无 temp+rename，崩溃可留半截文件 | `mod.rs:855 async fn write`（旧基线 `:1010-1043` 已因重写失效） | 三平台一致，加密路径除外（有 replace） |
 
 ## 验证深度四档（官方"支持"的真实含义）
 
@@ -93,3 +93,11 @@ Quickstart 明文三 OS（`docs/en/getting-started/02-quickstart.md:10`，中文
 - 硬事实：矩阵中全部锚点；四档划分依据
 - 解释：MinGW 选择的动机归因；`\\?\` "隐式能力"定性；Windows 用户路径排序
 - 未定：SMB 网络盘上 PathLock/filelocks 行为；`_test_full.yml` 空壳是有意降级还是未完成
+
+## v0.5.0 复核：localfs 重写后风险表仍成立，锚点全部换代（2026-10-19）
+
+`crates/ragfs/src/plugins/localfs/mod.rs` 在 v0.5.0 被重写 **819 行**（主要是 grep 去外部依赖，见 [`03`](03-operation-semantics.md) 末节）。结果：
+
+- **9 条风险的结论全部仍然成立**——`rename` 的两平台分裂、`chmod` no-op、就地写无 temp+rename、大小写零防护等，逐条对着新代码复核过。
+- **但 4 条锚点全部失效**（文件头部的 ripgrep 探测代码删除，整体行号上移）：`rename` 1171→**1014**、`chmod` 1257→**1117**、`write` 1010→**855**、`canonicalize` 63→**124**。已就地改正，旧行号保留在括号里以便对照。
+- 顺带确认一条**仍然成立的关键设计**：Windows 的 `rename` 覆盖走 `MoveFileExW(MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)`（`:1094-1097`）——这与风险 1 描述的行为一致，说明"Windows 分支特殊处理过这里"是**旧版就有的实现**，不是本轮新增。
