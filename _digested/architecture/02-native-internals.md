@@ -33,7 +33,7 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 
 `RAGFSBindingClient` 的 `#[pymethods]` 块（`lib.rs:1502` 起）暴露 **52 个方法**，其中 **15 个是 `pathlock_*`**：`acquire_exact`/`acquire_exact_batch`/`acquire_exact_tree_batch`/`acquire_tree`/`acquire_tree_batch`/`acquire_batch`/`release`/`release_selected`/`handoff`/`to_handoff`/`adopt`/`observe`/`refresh`/`is_locked`/`as_borrowed`。**原文写"约 49 个方法、含 8 个 `pathlock_*`"——方法数基本对（52），`pathlock_*` 数少了一半（8→15）**，与 `vfs/01` 记录的"PathLock 从 2 后端扩到 3 后端、新增整套批量/CAS/adopt/handoff 动作"对不上。此外还有 5 个 `git_*`、`system_sync_*` 等。
 
-> **锚点漂移说明**：旧版这一段的 `:1681 :1733 :1773 :1825 …` 全部是 `0f77ab56` 的行号，**在 v0.5.0 上整体下移约 180 行**（`read` 1681→1862）。旧版另外还锚了 `mkdir :1773`、`copy_within_mount :1891`、`mount :1993`、`grep :2088` 与当时记的 8 个 `pathlock_*` 具体行号（实际有 15 个，见上）——这些在 v0.5.0 未逐个复核，**按未定处理，引用前请自行 grep**。
+> **锚点漂移说明（2026-10-19 已逐个复核，不再是"未定"）**：旧版这一段锚的全是 `0f77ab56` 行号，在 v0.5.0 上**整体下移**，但**偏移量不均匀**（不是固定 189 行——此前版本曾写作"-189 偏移"，方向与量都不对）。实测四个方法（v0.5.0 行号）：`mkdir` **1954**（旧 1773，+181）、`copy_within_mount` **2071**（旧 1891，+180）、`mount` **2174**（旧 1993，+181）、`grep` **2272**（旧 2088，+184）；`read` **1862**（旧 1673，+189）。`pathlock_*` 类方法实际 **15 个**（旧版记 8 个，见上），`#[pymethods]` 块自 `lib.rs:1502` 起、共 52 个方法。**教训**：跨版本引行号时不要用"整体 ±N"概括——不同方法的插入点不同，逐个 grep 才是唯一可靠办法。
 
 【解释】值得注意：**绑定层比 VikingFS 暴露面更宽**（如 `chmod`、`digest`、`stream` 读）——Python 操作面的裁剪（无 chmod、find=语义）是产品决策不是能力边界（呼应 [`../vfs/03`](../vfs/03-operation-semantics.md)）。
 

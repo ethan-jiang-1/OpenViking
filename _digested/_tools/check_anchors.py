@@ -51,9 +51,16 @@ BARE_PATH_RE = re.compile(
 )
 
 # A line carrying any of these is a tombstone, not a live claim.
+# NOTE the asymmetry: a broad marker like "不存在" also appears in lines that
+# are LIVE evidence ("这句话并不存在" is the correction text, but the same line
+# goes on to cite the real anchor). Broad markers therefore do not skip the
+# whole line -- see SKIP_SCOPE below.
 TOMBSTONE_MARKERS = ("~~", "旧基线", "已删除", "被删", "不存在",
                      "旧锚点", "已缩到", "旧分支", "非死锚", "零命中",
                      "已随", "已腐化")
+
+# Markers that are specific enough to skip the entire line.
+HARD_TOMBSTONE = ("~~",)
 
 SOURCE_EXTS = (".py", ".rs", ".cpp", ".h", ".hpp", ".toml", ".json",
                ".mjs", ".js", ".ts", ".tsx", ".sh", ".sql")
@@ -104,9 +111,16 @@ def check(strict):
             continue
         with open(doc, encoding="utf-8") as fh:
             for lineno, line in enumerate(fh, 1):
-                if any(marker in line for marker in TOMBSTONE_MARKERS):
+                # Only an explicit strikethrough suppresses the line outright.
+                if any(marker in line for marker in HARD_TOMBSTONE):
                     stats["skipped_tombstone"] += 1
                     continue
+                # A soft marker ("不存在", "已删除", ...) means the line *may* be
+                # talking about something that is gone. It must NOT skip the
+                # line: the same line often goes on to cite a live anchor, and
+                # skipping it hid real defects. Soft-marked failures are
+                # reported as warnings instead of failing the build.
+                soft = any(marker in line for marker in TOMBSTONE_MARKERS)
                 for match in ANCHOR_RE.finditer(line):
                     cited, first, second = match.group(1), int(match.group(2)), match.group(3)
                     highest = max(first, int(second)) if second else first
@@ -115,7 +129,7 @@ def check(strict):
                     candidates = index.get(base, [])
                     if not candidates:
                         stats["nofile"] += 1
-                        findings.append((rel_doc, lineno, cited, highest, "NOFILE"))
+                        findings.append((rel_doc, lineno, cited, highest, "NOFILE", soft))
                         continue
                     # If the citation names directories, at least one real file
                     # must END with that path -- otherwise the doc points at a
@@ -130,7 +144,7 @@ def check(strict):
                             findings.append(
                                 (rel_doc, lineno, cited, highest,
                                  "BADPATH (no file ends with %s; basename exists at %s)"
-                                 % (tail, ", ".join(c[0] for c in candidates[:2])))
+                                 % (tail, ", ".join(c[0] for c in candidates[:2])), soft)
                             )
                             continue
                         candidates = exact
@@ -141,7 +155,7 @@ def check(strict):
                     longest = max(candidates, key=lambda item: item[1])
                     findings.append(
                         (rel_doc, lineno, cited, highest,
-                         "OOB (longest %s has %d lines)" % (longest[0], longest[1]))
+                         "OOB (longest %s has %d lines)" % (longest[0], longest[1]), soft)
                     )
 
                 # Bare paths: existence and directory-tail only.
@@ -156,7 +170,7 @@ def check(strict):
                     candidates = index.get(base, [])
                     if not candidates:
                         stats["bare_nofile"] += 1
-                        findings.append((rel_doc, lineno, cited, 0, "NOFILE (bare path)"))
+                        findings.append((rel_doc, lineno, cited, 0, "NOFILE (bare path)", soft))
                         continue
                     if "/" in cited:
                         tail = cited.lstrip("./")
@@ -167,7 +181,7 @@ def check(strict):
                             findings.append(
                                 (rel_doc, lineno, cited, 0,
                                  "BADPATH (bare; no file ends with %s; basename at %s)"
-                                 % (tail, ", ".join(c[0] for c in candidates[:2])))
+                                 % (tail, ", ".join(c[0] for c in candidates[:2])), soft)
                             )
                             continue
                     stats["bare_ok"] += 1
@@ -178,9 +192,17 @@ def check(strict):
                 "skipped_tombstone"):
         print("  %-18s %d" % (key, stats[key]))
 
-    if findings:
+    hard = [f for f in findings if not f[5]]
+    soft_warn = [f for f in findings if f[5]]
+
+    if soft_warn:
+        print("\nwarnings (line mentions something absent; verify by hand):")
+        for rel_doc, lineno, cited, highest, why, _ in soft_warn:
+            print("  %s:%d  %s:%s  -> %s" % (rel_doc, lineno, cited, highest, why))
+
+    if hard:
         print("\nfindings:")
-        for rel_doc, lineno, cited, highest, why in findings:
+        for rel_doc, lineno, cited, highest, why, _ in hard:
             print("  %s:%d  %s:%s  -> %s" % (rel_doc, lineno, cited, highest, why))
         if strict:
             return 1

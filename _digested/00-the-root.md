@@ -12,9 +12,11 @@ OpenViking 的根本不是"一个带 RAG 的存储"，而是一个**品类主张
 
 **主张**：数据库范式。原话（博客）："treats context as data for agents: something that can be ingested, organized, indexed, summarized, recommended, remembered, and continuously updated."
 
-**边界一句话**（官方 product boundary）：
+**边界一句话**（【外部·未复核】博客 product boundary，非仓库内文本）：
 
 > Vector search answers **what is semantically close**. File systems answer **where something lives**. A context database answers **how an agent should use the material**.
+
+> ⚠️ **来源说明**：这三句在 `docs/`、`README.md` 与源码里**零命中**（`grep -rn -i "where something lives"` 等均为 0）。它们只可能出自设计博客（`blog.openviking.ai`），而该站在本机不可达，**无法离线核对原文与措辞**。因此这里标【外部·未复核】而不是"官方原话"——如果把博客当成一手来源，请自己在有网环境打开确认，或改引 `docs/en/concepts/01-architecture.md` 里可核对的表述。
 
 读任何一篇机制文档前先记住这句：OpenViking 自我定位的第三句——"agent 应该怎么用这些材料"——是它的差异化承诺。
 
@@ -39,7 +41,7 @@ OpenViking 的根本不是"一个带 RAG 的存储"，而是一个**品类主张
 
 ## 三类上下文：生命周期不对称
 
-`docs/en/concepts/02-context-types.md:3` 自述这是"人类认知模式的简化映射"：
+官方原话（`docs/en/concepts/02-context-types.md:3`）："resources provide reference material, memories retain information from interactions, and skills describe how to carry out tasks"——**注意：这里只按"角色"三分，没有说它们映射人类认知**。~~旧文本曾在此引"人类认知模式的简化映射"作为官方自述，该句子在 `docs/` 与源码中零命中，已撤回~~。下面是【解释】，不是官方说法：
 
 | 类型 | 是什么 | 驱动者 | 生命周期 |
 |---|---|---|---|
