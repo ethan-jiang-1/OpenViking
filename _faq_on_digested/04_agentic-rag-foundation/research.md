@@ -139,7 +139,7 @@
 ### OpenViking 一手来源（全部 verified）
 - https://github.com/volcengine/OpenViking — README "Research" 段（本地 `README.md` 第 272–293 行验证：三篇论文的引用与描述一致）[verified]
 - https://blog.openviking.ai/post/openviking-context-database/ — "OpenViking: The Database Paradigm for Context Engineering"（设计思路：filesystem-as-context、L0 摘要、staged reading、token discipline）[verified]
-- https://docs.openviking.ai/en/concepts/07-retrieval — 检索机制文档（IntentAnalyzer、HierarchicalRetriever 伪代码、score_propagation_alpha=1.0、MAX_CONVERGENCE_ROUNDS=3、GLOBAL_SEARCH_TOPK=10、THINKING/QUICK 模式）[verified]（与本地源码 `openviking/retrieve/hierarchical_retriever.py` 的 `MAX_CONVERGENCE_ROUNDS = 3`、`score_propagation_alpha`、`openviking/retrieve/intent_analyzer.py`、`openviking/storage/viking_fs/_grep.py` 等一致 [verified]）
+- https://docs.openviking.ai/en/concepts/07-retrieval — 检索机制文档（IntentAnalyzer、HierarchicalRetriever 伪代码、score_propagation_alpha=1.0、MAX_CONVERGENCE_ROUNDS=3、GLOBAL_SEARCH_TOPK=10、THINKING/QUICK 模式）[**已失效** —— 2026-10-19 对 `v0.5.0` 复核：`MAX_CONVERGENCE_ROUNDS`、`score_propagation_alpha`、`GLOBAL_SEARCH_TOPK` 三个符号在全仓 grep **零命中**，已随 v0.5.0 的「两级递归 → 单遍全局召回」改造删除。官方文档那一页描述的是**旧机制**；`IntentAnalyzer`（`openviking/retrieve/intent_analyzer.py`）仍在，但 `HierarchicalRetriever` 的伪代码已不符。保留此条仅为记录当年确实对过源码，**当前不可作为检索机制的引用依据**，请改用 `_digested/core/03-retrieval-global-recall.md`]
 - https://docs.openviking.ai/en/about/01-about-us — Team & Org（学术合作者 = 论文作者交叉印证；"context database" 定位）[verified]
 - https://github.com/volcengine/OpenViking/tree/main/benchmark — 论文引用的 benchmark 配置仓库（未逐文件抓取）[unverified 内容细节]
 

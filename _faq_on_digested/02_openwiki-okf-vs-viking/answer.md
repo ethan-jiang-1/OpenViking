@@ -10,7 +10,7 @@
 |---|---|---|---|
 | **OKF v0.2**（Open Knowledge Format） | 一个**可移植知识包格式规范**：每页 YAML frontmatter（`type` 必填）+ body；可选 provenance/trust/lifecycle 家族（`generated{by,at}` / `sources` / `verified` / `status` / `stale_after`）；`index.md`/`log.md` 保留文档；Markdown 链接表达页面关系 | **Google**（GoogleCloudPlatform/knowledge-catalog） | 【外部事实】[OKF SPEC](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)、[OpenWiki README](https://github.com/langchain-ai/openwiki) |
 | **OpenWiki** | 一个 **CLI 工具**：Deep Agents 文档 agent 读代码库（或个人知识源），生成并持续更新 OKF wiki；Grounded Claims 把每条事实绑到 `repo://src/server.ts#L40-L82` 级别的版本化证据，证据变更即知道哪些命题要复核；CI 定时开 docs PR；配 Codex/Claude Code/OpenCode/Cursor 的编码 agent 集成（MCP page-job 生命周期）与可视化 graph | **LangChain** | 【外部事实】同上 |
-| **OpenViking 的 OKF-style sidecar** | L0/L1 语义摘要文件的**内部文档格式**：YAML frontmatter（directory / source / generated_by / freshness 四组字段）+ 可见 body | 本仓库 | 【硬事实】`docs/design/l0-l1-okf-sidecars-rfc.md:1-12,50-70`、`openviking/storage/abstract_overview.py:3,178-231` |
+| **OpenViking 的 OKF-style sidecar** | L0/L1 语义摘要文件的**内部文档格式**：YAML frontmatter（directory / source / generated_by / freshness 四组字段）+ 可见 body | 本仓库 | 【硬事实】`openviking/storage/abstract_overview.py:3,178-231`；~~`docs/design/l0-l1-okf-sidecars-rfc.md:1-12,50-70`~~ **该文件已被 v0.5.0 删除**（`docs/design/` 整目录消失），旧基线锚点仅供溯回，见文末反转记录 |
 
 ## 二、"我们支持吗"——分三层回答
 
@@ -48,7 +48,7 @@
 1. **归属**：OpenWiki = LangChain（`langchain-ai/openwiki`，npm `openwiki`，MIT）；OKF v0.2 规范 = Google（`GoogleCloudPlatform/knowledge-catalog/okf/SPEC.md`）。
 2. **OpenWiki 是什么**：CLI 工具——agent 读代码库/连接器，生成并持续更新 linked Markdown wiki；Grounded Claims 把事实绑到版本化代码证据；CI 定时开 docs PR；有 Codex/Claude Code/OpenCode/Cursor 集成与可视化 graph。无 server、无向量检索。
 3. **OKF v0.2 是什么**：文档格式规范——每页 YAML frontmatter（`type` 必填）+ body，可选 `generated{by,at}` / `sources` / `verified` / `status` / `stale_after` 家族；`index.md`/`log.md` 保留；Markdown 链接表达页面关系。
-4. **OpenViking 侧的 OKF**：L0/L1 sidecar 用 minimal OKF-style Markdown（RFC `docs/design/l0-l1-okf-sidecars-rfc.md:1-12`），四组字段 directory/source/generated_by/freshness，自述比 general OKF wiki pages 收窄（:121）；RFC 未引用 Google spec，正式兼容关系不存在也未宣称。
+4. **OpenViking 侧的 OKF**：L0/L1 sidecar 用 minimal OKF-style Markdown（RFC `docs/design/l0-l1-okf-sidecars-rfc.md:1-12`——**该 RFC 已随 v0.5.0 删除**，此处为旧基线引用），四组字段 directory/source/generated_by/freshness，自述比 general OKF wiki pages 收窄（:121）；RFC 未引用 Google spec，正式兼容关系不存在也未宣称。
 5. **组合方式**：`ov add-resource ./openwiki/ -w` 把 OpenWiki 产物摄入为 Resource（静态，非 Memory），即可被 find/search 语义检索。
 6. **选型判据**：代码库文档保鲜、人机共读 → OpenWiki；跨会话记忆/上下文检索 → OpenViking；组合使用落在 00-the-root 的 Resource/Memory 划分上。
 
