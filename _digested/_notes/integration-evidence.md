@@ -6,6 +6,9 @@
 > - **最大缺口：本报告写于 gateway 出现之前。** v0.5.0 新增第七种接入形态 `openviking-gateway`（独立进程，默认 `127.0.0.1:1935`，约 7k 行纯 Python ASGI，与内核零代码耦合），本报告完全没有覆盖——见 [`../integration/01`](../integration/01-start-here.md) 的 §OpenViking Gateway。
 > - 其他过时项：MCP 工具 15 → **20**；`sessions/{id}/used` **删除**；`heartbeat` **删除**；pi 工具名改 `openviking_<tool>`；安装器默认装 `ov`；新增 Kimi Code / ZCode 宿主。
 > - **仍有效**：`/api/v1` 路由分组结构、`AuthPlugin` 5 插件注册模型（无条件 3 + 条件 2）、三语言 SDK 定位对比、`ov` = Rust 二进制 + execv 包装。
+- **2026-10-19 二次复核（本报告自身的问题）**：本报告的行号是整批按 `0f77ab56` 写的，且有一大段用了 `` `符号`(:NN) `` 这种**裸行号**写法，锚点检查器看不到。逐条手工复核后发现以下已修正：
+  `mcp_endpoint.py` 行号整体漂移（工具清单 15→20 个，`find` :249→:449、`read` :501→:852、`grep` :1333→:1975……）、`create_mcp_app` :1538→**:2208**、`_apply_portable_schemas` :1514→**:2184**、app.py 的 MCP lifespan :388-390→**:381-383**、Web Studio 块 :793-833→**:744-786**（原值甚至越过了 812 行的文件末尾）。
+  **教训**：`符号(:NN)` 这种写法绕过了任何基于"文件:行号"的自动检查，是锚点腐烂的藏身处。今后取证一律写 `文件:行号`，不要只写 `(:NN)`。
 
 
 > 只读取证（未执行任何 git 命令）。所有行号均为当前工作区文件的真实行号。
@@ -29,14 +32,19 @@ FastAPI server（默认 `http://127.0.0.1:1933`）：
   Claude Code (or any MCP client) via streamable HTTP」；`openviking/server/mcp_endpoint.py:28`
   `from mcp.server.fastmcp import FastMCP`。
 - 挂载点：`openviking/server/app.py:809`（`_ScopedRoute` 定义 `:797`）— `_ScopedRoute("/mcp", endpoint=create_mcp_app(),
-  methods=["GET","POST","DELETE"])`；`create_mcp_app` 定义在 mcp_endpoint.py:1538。
-- MCP session manager 生命周期绑在 FastAPI lifespan：app.py:388-390（`async with mcp_lifespan()`）。
-- 工具清单（`@mcp.tool`，15 个，mcp_endpoint.py:1532-1534 自述）：
-  `find`(:249) `search`(:276) `read`(:501) `list`/`ls`(:642) `tree`(:704) `remember`(:780)
+  methods=["GET","POST","DELETE"])`；`create_mcp_app` 定义在 mcp_endpoint.py:**2208**（旧基线 `:1538`，该处现在是 add_resource 的分支逻辑）。
+- MCP session manager 生命周期绑在 FastAPI lifespan：app.py:**381-383**（`from ... import mcp_lifespan` / `async with mcp_lifespan()`；旧基线 `:388-390`，该处现在是 metrics 与 usage_audit 的清理）。
+- 工具清单（**`v0.5.0` 实测 20 个**，`mcp_endpoint.py:5-7` docstring 自述"registrations below are the authoritative list"）：
+  `list_users`(:356) `list_groups`(:394) `get_acl`(:407) `set_acl`(:417) `find`(:449) `search`(:509)
+  `read`(:852) `list`/`ls`(:1005) `tree`(:1087) `remember`(:1167) `write`(:1203) `edit`(:1250)
+  `add_resource`(:1422) `add_skill`(:1728) `list_watches`(:1898) `cancel_watch`(:1931)
+  `grep`(:1975) `glob`(:2050) `forget`(:2079) `health`(:2095)。
+  **旧基线（15 个）**的锚点是 `find`(:249) `search`(:276) `read`(:501) `ls`(:642) `tree`(:704) `remember`(:780)
   `write`(:805) `edit`(:845) `add_resource`(:999) `list_watches`(:1258) `cancel_watch`(:1290)
-  `grep`(:1333) `glob`(:1385) `forget`(:1411) `health`(:1424)。
+  `grep`(:1333) `glob`(:1385) `forget`(:1411) `health`(:1424)——v0.5.0 全部漂移，且新增 5 个
+  （4 个 ACL/账号 + `add_skill`）。
   注释注明与 vikingbot 工具对齐（mcp_endpoint.py:227）。
-- `_apply_portable_schemas()`（mcp_endpoint.py:1514-1519）把 FastMCP 类型提示 schema 改写成
+- `_apply_portable_schemas()`（mcp_endpoint.py:**2184**，旧基线 `:1514-1519`）把 FastMCP 类型提示 schema 改写成
   「portable」schema（压平 Optional/Union），说明作者在意跨 MCP 客户端兼容性。
 - MCP OAuth 2.1：app.py:679-686 引入 `mcp.server.auth.routes` 并挂 `oauth_router`；
   `openviking/server/oauth/router.py:224` `/.well-known/oauth-protected-resource`（PRM 文档）、
