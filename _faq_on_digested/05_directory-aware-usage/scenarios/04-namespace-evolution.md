@@ -2,6 +2,10 @@
 
 > 一句话：知识库是**活的**——项目搬走、会话归档、技能整理、目录合并。这套设计把"结构维护"做成了一等公民：**MOVE = 子树重挂 + 祖先聚合更新，MERGE = 只调和冲突分支**，而不是"重写被影响子树的所有路径键"（论文 V-C）。所以：**别怕重组，重组的代价在 TrieHI 下是 tree-local 的**。
 
+> ⚠️ **机制已过期（v0.5.0）**：本文的**用法建议**大多仍成立，但关于"L0/L1 第一跳 / 目录递归 / 收敛停 / 分数传播 / 并发子目录"的**机制描述已全部失效**——那套两级检索在 `v0.5.0` 已被删除，现在是单次全局检索 + 可选 rerank。
+> 逐条对照见 [`_V050_RETRACTION.md`](_V050_RETRACTION.md)，**读本文前先读它**。论文 Table 里的数字仍然正确，但描述的是论文里的 TrieHI，本仓库**没有对应实现**。
+
+
 ## 什么时候发生
 
 - 项目从"进行中"归档到"已归档"（整棵子树搬走）；
@@ -79,6 +83,6 @@ ov stat "viking://resources/platform/"          # 看 pending_child_changes
 ## 坑
 
 1. **重组后立即检索**：等 freshness 冒泡（见上面 sequence），或显式检查 `pending_child_changes`；
-2. **频繁整库重组**：虽然 MOVE 便宜，但每次重组都触发父级语义刷新——高频搬家会制造刷新风暴（仓库里也有 TODO：用 freshness 合并/限流父级刷新，`03-context-layers.md` "TODO: control bubbling frequency"）；
+2. **频繁整库重组**：虽然 MOVE 便宜，但每次重组都触发父级语义刷新——高频搬家会制造刷新风暴（~~仓库里也有 TODO：用 freshness 合并/限流父级刷新，`03-context-layers.md` "TODO: control bubbling frequency"~~——**该 TODO 引用已撤回**：`control bubbling frequency` 在全仓 `*.md`/`*.py` 中零命中（除本行自身），`docs/en/concepts/03-context-layers.md` 里没有这句话。刷新风暴本身是真的，但没有可引用的官方 TODO 来说明它有合并/限流计划）；
 3. **改目录名 = 改 URI 前缀**：所有后代的 URI 都变——外部引用（插件配置、MCP 工具里写死的 URI）要同步改；
 4. **搬移带 ACL 的子树**：作用域/权限跟着子树走，搬完要确认新位置的 ACL 语义正确（`docs/en/concepts/15-acl.md`）。

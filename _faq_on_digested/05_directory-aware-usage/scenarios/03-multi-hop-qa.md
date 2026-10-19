@@ -2,6 +2,10 @@
 
 > 一句话：答案的证据**分散在文档结构的不同位置**（一个目录讲概念、另一个目录讲实现、第三个讲配置），单次扁平检索抓不全。这是论文 Table VII（HotpotQA）直接评测的场景，也是 VikingRAG "evidence-gap-driven multi-round retrieval" 的核心动机。
 
+> ⚠️ **机制已过期（v0.5.0）**：本文的**用法建议**大多仍成立，但关于"L0/L1 第一跳 / 目录递归 / 收敛停 / 分数传播 / 并发子目录"的**机制描述已全部失效**——那套两级检索在 `v0.5.0` 已被删除，现在是单次全局检索 + 可选 rerank。
+> 逐条对照见 [`_V050_RETRACTION.md`](_V050_RETRACTION.md)，**读本文前先读它**。论文 Table 里的数字仍然正确，但描述的是论文里的 TrieHI，本仓库**没有对应实现**。
+
+
 ## 什么时候发生
 
 - 问题需要**组合多个事实**（"这个系统怎么认证、限流、并且记录审计日志？"——答案横跨 auth/rate-limit/audit 三个目录）；
@@ -55,7 +59,7 @@ flowchart TD
 
 ```bash
 # 多跳：带主题域作用域 + 放大预算（top-20 的增益来自同作用域证据）
-ov search --session <id> --topk 20 "platform 域如何完成认证、限流与审计？" --uri "viking://resources/platform/"
+ov search --session-id <id> --node-limit 20 "platform 域如何完成认证、限流与审计？" --uri "viking://resources/platform/"
 
 # 也可以先 find 定位相关目录，再对目录 find
 ov find "限流实现" --uri "viking://resources/platform/"

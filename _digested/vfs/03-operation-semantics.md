@@ -53,7 +53,7 @@ grep / grep_file / glob_directory / tree_directory
 
 | 动词 | coreutils 直觉 | 实际语义 | 锚点 |
 |---|---|---|---|
-| `find` | 按名字/属性找文件 | **全局语义召回**，固定不精排（`find` 永远 `use_rerank=False`） | `_semantic.py:306`（`search_type="find", use_rerank=False`）、`:196 def find`；[`core/03`](../core/03-retrieval-global-recall.md) |
+| `find` | 按名字/属性找文件 | **全局语义召回**，**固定不精排** | `openviking/storage/viking_fs/_semantic.py:302-313`（`find()` 调 `retriever.retrieve(..., mode=RetrieverMode.QUICK, ...)`）、`:196 def find`；对照 `hierarchical_retriever.py:124`（`use_rerank` 只在 `THINKING` 下为真）。⚠️ **本行原文引过 `_semantic.py:306` 的 "`search_type="find", use_rerank=False`"——那句话是编的**：`use_rerank` 在全仓只存在于 `hierarchical_retriever.py`（`:124`/`:183`/`:225`），`_semantic.py` 里根本没有这个符号。**结论对（find 永远不 rerank），但原证据不成立**，已换成真正能支撑结论的两个锚点。[《 core/03](../core/03-retrieval-global-recall.md) |
 | `mv` / `rm` | 移动/删除字节 | **同步向量索引的 URI 元数据**（普通 FS 没有的副作用） | `mv`：`_ops.py:682` → `:807`/`:826` `_update_vector_store_uris` → `_vector.py:60` → `vikingdb_manager.py:532 update_uri_mapping` → `viking_vector_index_backend.py:2830`（`rewrite_vector_record(mode="move")` `:2861`）；`rm`：`_ops.py:215`（向量删除失败现在**会重抛**，`_vector.py:34-36`） |
 | `append_file` | O_APPEND 原子追加 | pathlock 租约下**读旧+整文件重写**（注释原话 "avoid lost updates"） | `_ops.py:2116` |
 | `mkdir` | 建空容器 | 目录是**数据记录**（L0/L1 文案 + 向量） | [`core/01`](../core/01-viking-uri-and-vfs.md) |

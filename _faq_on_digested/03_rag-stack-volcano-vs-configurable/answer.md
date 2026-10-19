@@ -16,13 +16,15 @@
 | **BM25 grep** | 关键词/正则内容检索；VikingDB 系后端走 BM25 召回 + 本地精确匹配两段式 | `grep` 配置块；`viking_fs/_grep.py:264-403` |
 | **混合检索** | dense + sparse 加权（`sparse_weight`） | `storage.vectordb.sparse_weight`（`docs/en/guides/01-configuration.md:1434`） |
 
-## 二、模型层：宽门——13 / 4 / 7 个 provider，可自配甚至全离线
+## 二、模型层：宽门——13 / 5 / 7 个 provider，可自配甚至全离线
+
+> （此前标题写 "4 个" rerank provider，正文已修正为 **5**，含 `jev`；标题未跟上。）
 
 **【硬事实】embedding 的 provider 是封闭枚举但宽到 13 个**（`embedding_config.py:168-182` `_VALID_PROVIDERS`）：`openai / azure / volcengine / vikingdb / jina / ollama / gemini / voyage / dashscope / minimax / cohere / litellm / local`。其中 `openai` + 自定义 `api_base` 或 `litellm` 桥接 = **任意 OpenAI 兼容端点**（OpenRouter、自建 llama.cpp/MLX/vLLM、任何网关）；`ollama` 直连本地；`local` 是进程内 GGUF。
 
 **【硬事实】开箱默认不是火山**：整个 `embedding` 配置块缺省时，`apply_default_local_dense` 自动填 `{provider: "local", model: "bge-small-zh-v1.5-f16"}`（`embedding_config.py:688-700`）——本地 GGUF，512 维，`llama-cpp-python` 加载，模型文件自动从 HuggingFace 下载（`models/embedder/local_embedders.py:21-46`），`pip install "openviking[local-embed]"` 即可。**只有显式写了一个 dense 块却没写 provider 时**，默认值才是 `volcengine`（`embedding_config.py:69-78`）。这个"配置缺省→本地、写了没指明→火山"的双默认是理解产品取向的关键。
 
-**rerank **5** 个 provider**（`rerank_config.py:13` 的 description、`:96-106` 的校验列表）：`vikingdb / cohere / openai / litellm / jev`——**原文写"4 个"，漏了 `jev`**（Jev/TypeSafe，实现在 `openviking/models/rerank/jev_rerank.py`，还有专属的 `mode in ("noul","choice")` 校验 `:90-93`）。`openai` + `api_base` 可以指向 DashScope（`qwen3-rerank`）或任何 OpenAI 兼容 rerank 服务（含本地冷启动场景，超时可调，配置项见 `docs/en/guides/01-configuration.md:2216`）。不配 rerank 时 search 用纯向量相似度。不配 rerank 时 search 用纯向量相似度。
+**rerank **5** 个 provider**（`rerank_config.py:13` 的 description、`:96-106` 的校验列表）：`vikingdb / cohere / openai / litellm / jev`——**原文写"4 个"，漏了 `jev`**（Jev/TypeSafe，实现在 `openviking/models/rerank/jev_rerank.py`，还有专属的 `mode in ("noul","choice")` 校验 `:90-93`）。`openai` + `api_base` 可以指向 DashScope（`qwen3-rerank`）或任何 OpenAI 兼容 rerank 服务（含本地冷启动场景，超时可调，配置项见 `docs/en/guides/01-configuration.md:2216`）。不配 rerank 时 search 用纯向量相似度。
 
 **【硬事实】VLM 7 个 provider**（`models/vlm/registry.py:10-18`）：`volcengine / openai / azure / kimi / glm / litellm / openai-codex`——同样是"volcengine 只是其一"。
 
@@ -56,7 +58,7 @@
 
 **【硬事实】本地/自建路径没有 BM25**：`local_collection.py:734-764` 的 `search_by_keywords` 直接 `NotImplementedError`；local/cuvs/http 后端不写 `content` 字段（`USE_CONTENT_FIELD=False`），grep 自动落回 agfs 原生 grep（Rust）或 VikingFS 正则扫描（含加密文件解密匹配，`_grep.py:225-262`）。**仓库里没有任何本地 BM25 索引实现**（Rust 侧 grep full-text 检索无匹配，grep 结果为空）——想要真正的关键词召回，要么上 VikingDB 系后端，要么把"稀疏信号"交给火山系 sparse embedding（注意：那是稀疏向量，不是 BM25，两套机制）。
 
-**【外部事实】BM25 grep 是 v0.4.6（2026-06-29）才加入的能力**（`docs/zh/about/02-changelog.md:65`）——不是开箱就有，是火山系后端增强项。
+**【外部事实】BM25 grep 是 v0.4.6（2026-06-29）才加入的能力**（`docs/zh/about/02-changelog.md:77`，节标题 `:70`）——不是开箱就有，是火山系后端增强项。
 
 ## 六、结论：你能配到什么程度（四档递进）
 
@@ -73,7 +75,7 @@
 
   ⚠️ **但"行号已重锚"这句话当时是虚的**（2026-10-19 二次复核发现）：正文里 `base.py:116`、`volcengine_adapter.py:26`、`vikingdb_private_adapter.py:21`、`_grep.py:133-170`、`local_collection.py:704-731`、`understanding_api.py:67-69`、`factory.py:15-21`、`embedding_config.py:675-689` 等**十余处仍是旧基线行号**，且 `rerank 4 个 provider`、`注册表 5 项`、`README_CN.md:103` 三处是**内容层面的错**不是漂移。已逐个改正。
   **教训**：状态标注里写"已复核"必须逐条对着代码签，否则它会变成下一轮复核的**免检通行证**——这一条比任何单个行号错都危险。
-- 【外部事实】v0.4.6 引入 "VikingDB BM25 grep"（`docs/zh/about/02-changelog.md:65`，日期 2026-06-29）
+- 【外部事实】v0.4.6 引入 "VikingDB BM25 grep"（`docs/zh/about/02-changelog.md:77`，条目原文 "VikingDB BM25 grep 与 Studio 指标"；节标题 `:70` 为 v0.4.6 2026-06-29）
 - 【解释】"双默认"（配置缺省→本地 / 写了没指明→火山）的取向判断；四档配置路径的归纳；"BM25 只做粗召回、regex 保证正确性"的角色划分
 - 【未定】litellm rerank 客户端（`models/rerank/litellm_rerank.py`）在配置文档表格中未列出、但 `rerank_config.py:13` 已收录——文档与代码口径的细微出入未进一步追查
 

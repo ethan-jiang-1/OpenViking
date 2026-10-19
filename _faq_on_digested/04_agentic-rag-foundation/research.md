@@ -1,7 +1,11 @@
 # 网络调研原始材料 (raw research notes)
 
 > 主题：OpenViking 的 "directory-aware / agentic RAG" 检索设计的学术基础与已发表对比证据。
-> 调研对象：OpenViking（github.com/volcengine/OpenViking，docs.openviking.ai）——把知识库当文件系统（`viking://` URI、目录/资源/记忆/技能），检索管线 = QUICK（平面向量搜索）/ THINKING（目录级 L0/L1 向量检索 + 重排 + 递归下钻 + 分数传播 + 收敛停止）+ LLM IntentAnalyzer（多 TypedQuery 并发）+ 混合稠密/稀疏检索 + 两阶段 BM25 grep。
+> 调研对象：OpenViking（github.com/volcengine/OpenViking，docs.openviking.ai）——把知识库当文件系统（`viking://` URI、目录/资源/记忆/技能）。
+> 
+> **检索管线（v0.5.0 现状）**：单次全局向量检索 + 可选 rerank（QUICK = 不 rerank，THINKING = rerank；`hierarchical_retriever.py:122-123`）+ LLM IntentAnalyzer（多 TypedQuery 并发）+ 混合稠密/稀疏检索 + 两阶段 BM25 grep。DSQ 作用域（`target_uri`/`scope_dsl`）负责把检索限定在目录/用户分支内。
+> 
+> ~~v0.4.x 旧管线：THINKING = 目录级 L0/L1 向量检索 + 重排 + **递归下钻 + 分数传播 + 收敛停止**~~——**这半套已在 v0.5.0 删除**（`recurs`/`converg`/`score_propag` 在 `openviking/retrieve/hierarchical_retriever.py` 中零命中，文件从 672 行缩到 381 行）。本文凡涉及“递归”的分析都是**针对论文的 TrieHI**，不是本仓库现状；逐条反转见同目录 `answer.md` 的 `## 反转记录`。
 > 方法：只报告从可抓取的一手来源（arXiv 摘要页/全文 HTML、官方 blog、官方 docs、本地源码）验证过的声明，每条附 URL。抓不到的来源明确标注 "unverified"。
 > 原始抓取材料（全文 HTML→txt 转换）保留在 `./_raw/`（vikingmem.html/.txt、directory_aware.html/.txt、vikingrag.html/.txt、crag.html/.txt）。
 

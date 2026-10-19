@@ -2,6 +2,10 @@
 
 > 一句话：memories 树按**用户 → 会话/主题**组织，高频问题是"某个用户/某段经历里提到过什么"。这是论文 IV-C 的第二个明写场景（*"or a user-memory branch"*），也是 Table VI（LOCOMO）直接评测的场景。
 
+> ⚠️ **机制已过期（v0.5.0）**：本文的**用法建议**大多仍成立，但关于"L0/L1 第一跳 / 目录递归 / 收敛停 / 分数传播 / 并发子目录"的**机制描述已全部失效**——那套两级检索在 `v0.5.0` 已被删除，现在是单次全局检索 + 可选 rerank。
+> 逐条对照见 [`_V050_RETRACTION.md`](_V050_RETRACTION.md)，**读本文前先读它**。论文 Table 里的数字仍然正确，但描述的是论文里的 TrieHI，本仓库**没有对应实现**。
+
+
 ## 什么时候发生
 
 - 用户偏好、习惯、历史决策要跨会话复用（"他习惯用 X 风格"、"上次排障最后怎么解决的"）；
@@ -64,7 +68,7 @@ sequenceDiagram
 ov find "代码风格偏好" --uri "viking://~/memories/users/alice/" --context-type memory
 
 # 方式二：search + 会话上下文（跨会话提问，让意图规划补全上下文）
-ov search --session <当前会话> "按 alice 的偏好给这个项目配 lint"
+ov search --session-id <当前会话> "按 alice 的偏好给这个项目配 lint"
 ```
 
 - 记忆按**主题**分层（preferences/tooling/sessions/…），L0 才能聚焦——一个"用户画像"目录塞 500 条零散记忆，L0 概括不了；

@@ -8,12 +8,15 @@
 
 ## 一、它到底做了什么（本地证据，基线 `0f77ab56`）
 
-### 1.1 检索链路四环节（官方口径 `docs/en/concepts/07-retrieval.md`）
+### 1.1 检索链路四环节（⚠️ **这是 v0.4.x 的旧管线，不是 v0.5.0 现状**）
+
+> **重要更正**：本节原先标“官方口径”并锚 `docs/en/concepts/07-retrieval.md`。但 `v0.5.0` 的那份官方文档 `:82` 写的是**相反**的话：`retrieval does not navigate directories recursively`。下面这张图和表格描述的是 `v0.4.x`（基线 `0f77ab56`）的管线；**`v0.5.0` 已删除 Directory Recursion、分数传播与收敛停**，现在是单次全局向量检索 + 可选 rerank。保留本图是为了解释论文里 TrieHI 的动机，**不要当成当前实现**。逐条反转见本文件 `## 反转记录`。
+
 
 ```
 Query → Intent Analysis → Hierarchical Retrieval → Rerank → Results
               ↓                    ↓                  ↓
-         TypedQuery          Directory Recursion   Refined Scoring
+         TypedQuery          [已删除] 递归       [已删除] 分数传播
 ```
 
 | 环节 | 机制 | 锚点 |
@@ -100,11 +103,12 @@ Query → Intent Analysis → Hierarchical Retrieval → Rerank → Results
 
 ## 状态标注
 
-- 【硬事实】检索链路四环节、IntentAnalyzer 单次规划（temperature=0）、THINKING 递归机制、L0/L1 目录 sidecar、context_type→根目录映射、scope_dsl——锚点 `openviking/retrieve/*`、`docs/en/concepts/{01,03,07}*.md`，基线 `0f77ab56`
+- 【硬事实】IntentAnalyzer 单次规划（temperature=0）、L0/L1 目录 sidecar、context_type→根目录映射、scope_dsl——锚点 `openviking/retrieve/*`、`docs/en/concepts/{01,03,07}*.md`，基线 `0f77ab56`
+- ~~【硬事实】检索链路四环节、THINKING 递归机制~~——**已随 v0.5.0 撤回**：`v0.5.0` 删除了目录递归/分数传播/收敛停，现在的链路是"单次全局召回 + 可选 rerank"，THINKING 只表示"要不要 rerank"（`hierarchical_retriever.py:122-123`）。详见本文件 `## 反转记录` 与 `docs/en/concepts/07-retrieval.md:82`。
 - 【硬事实】README Research 区三篇论文官方表述（`README{,_CN,_JA}.md`，commit `c31e261b` #4924）；`benchmark/RAG/` 数据集与度量轴
 - 【外部事实·已验证】三篇论文的 arXiv 位置、摘要、实验数字（VikingRAG Table 3、Directory-Aware Table IV/VI/VII、VikingMem §5）、CRAG/RAPTOR/Self-RAG 定位——全部来自抓取到的 arXiv 原文与官方页面，见 [research.md](research.md) 与 `_raw/` 原始全文
 - 【外部事实·未证实】"Directory-Aware 被 ICDE 接收"（arXiv 页无注释）；VikingRAG 的评审状态（submitted）
-- 【解释】"单次规划 + 确定性递归"的 agentic 变体定位；"数据库派 agentic RAG"的归纳；"怪异感"来源
+- ~~【解释】"单次规划 + 确定性递归"的 agentic 变体定位~~（**“递归”这一半已失效**，“单次规划”仍成立）；"数据库派 agentic RAG"的归纳；"怪异感"来源
 - 【未定】论文声称的 "experience edges / 检索轨迹复用" 与代码里 trajectory/`retrieval_anchor` 子系统的精确对应程度；两篇论文 LOCOMO 数字因裁判模型不同无法合并解读
 
 ---

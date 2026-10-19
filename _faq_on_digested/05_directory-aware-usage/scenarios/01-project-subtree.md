@@ -2,6 +2,10 @@
 
 > 一句话：知识库按**项目/工作区**组织，高频问题是"**在某棵子树范围内**找 X 的实现、文档、配置"。这是论文 IV-C 明写的首要场景（*"such as a project subtree"*）。
 
+> ⚠️ **机制已过期（v0.5.0）**：本文的**用法建议**大多仍成立，但关于"L0/L1 第一跳 / 目录递归 / 收敛停 / 分数传播 / 并发子目录"的**机制描述已全部失效**——那套两级检索在 `v0.5.0` 已被删除，现在是单次全局检索 + 可选 rerank。
+> 逐条对照见 [`_V050_RETRACTION.md`](_V050_RETRACTION.md)，**读本文前先读它**。论文 Table 里的数字仍然正确，但描述的是论文里的 TrieHI，本仓库**没有对应实现**。
+
+
 ## 什么时候发生
 
 - 你在一个项目目录下提问，答案大概率只在这个项目自己的文档/代码/配置里；
@@ -63,10 +67,10 @@ sequenceDiagram
 
 ```bash
 # 方式一：作用域锚定（推荐）——等于论文的 DSQ：先解析范围，再向量排序
-ov find "OAuth 认证实现" --uri "viking://resources/projects/viking-gateway/" --depth 3
+ov find "OAuth 认证实现" --uri "viking://resources/projects/viking-gateway/" --node-limit 10
 
 # 方式二：search（带会话上下文才会触发意图规划与 THINKING）
-ov search --session <id> "帮我写 viking-gateway 的 OAuth 接入 RFC"
+ov search --session-id <id> "帮我写 viking-gateway 的 OAuth 接入 RFC"
 ```
 
 - 作用域给得越具体，质量越高（论文 Figure 11：*"retrieval quality generally improves as the query path becomes more specific"*）；

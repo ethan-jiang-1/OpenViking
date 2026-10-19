@@ -4,7 +4,7 @@
 
 ## 先给结论
 
-RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路由器**（按路径前缀把操作分发给挂载的插件）+ **7 个插件**（**4 个内容存储**：`kvfs`/`localfs`/`memfs`/`s3fs` + **3 个服务面**：`queuefs`/`serverinfofs`/`sqlfs`；`crates/ragfs/src/plugins/mod.rs:14-21` 逐个 re-export）+ **一套纯 Rust 的 git 语义对象存储**（快照/commit/restore 的真正实现地）+ 加密/多写/统计三个包装器洋葱。C++ 侧则是**四个 PyCapsule 暴露的内存向量引擎**：`VolatileIndex` 全内存扫描 + x86 SIMD 变体加速距离计算，持久化靠 leveldb 的 KVStore capsule，GPU ANN 交给 cuVS 适配器——**没有 HNSW/IVF 类图索引**。调用图见 [`callgraph.svg`](callgraph.svg)。
+RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路由器**（按路径前缀把操作分发给挂载的插件）+ **7 个插件**（`crates/ragfs/src/plugins/mod.rs:14-21` 逐个 re-export；**别用"4 内容 + 3 服务面"这种分法**——那是本文旧版的发明，代码自己的 control-plugin 集合只有 2 个：`crates/ragfs/src/core/mountable.rs:356` 的 `matches!(name, "queuefs" | "serverinfofs")`，而 `kvfs` 自述就是通用 KV 内容存储、`sqlfs` 自述是 SQL 后端的**文件系统**，两者都不是"服务面"。按代码口径只能说：**`localfs`/`s3fs`/`memfs`/`kvfs`/`sqlfs` 是内容或持久化后端，`queuefs`/`serverinfofs` 是控制面**）+ **一套纯 Rust 的 git 语义对象存储**（快照/commit/restore 的真正实现地）+ 加密/多写/统计三个包装器洋葱。C++ 侧则是**四个 PyCapsule**（`IndexEngine`/`KVStore`/`Schema`/`BytesRow`，`src/abi3_engine_backend.cpp:25-28`）暴露的引擎：索引引擎 `IndexEngine` + 内存 KV 后端 `VolatileStore`（`src/store/volatile_store.h:13`，内部是 `std::map<std::string,std::string> data_`，`:39`）+ 持久化靠 leveldb 的 `KVStore` capsule，距离计算有 x86 SIMD 变体，GPU 场景走 cuVS 适配器。
 
 ## A. RAGFS 内部（crates/ragfs/src/）
 
@@ -35,7 +35,7 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 
 > **锚点漂移说明（2026-10-19 已逐个复核，不再是"未定"）**：旧版这一段锚的全是 `0f77ab56` 行号，在 v0.5.0 上**整体下移**，但**偏移量不均匀**（不是固定 189 行——此前版本曾写作"-189 偏移"，方向与量都不对）。实测四个方法（v0.5.0 行号）：`mkdir` **1954**（旧 1773，+181）、`copy_within_mount` **2071**（旧 1891，+180）、`mount` **2174**（旧 1993，+181）、`grep` **2272**（旧 2088，+184）；`read` **1862**（旧 1673，+189）。`pathlock_*` 类方法实际 **15 个**（旧版记 8 个，见上），`#[pymethods]` 块自 `lib.rs:1502` 起、共 52 个方法。**教训**：跨版本引行号时不要用"整体 ±N"概括——不同方法的插入点不同，逐个 grep 才是唯一可靠办法。
 
-【解释】值得注意：**绑定层比 VikingFS 暴露面更宽**（如 `chmod`、`digest`、`stream` 读）——Python 操作面的裁剪（无 chmod、find=语义）是产品决策不是能力边界（呼应 [`../vfs/03`](../vfs/03-operation-semantics.md)）。
+【解释】值得注意：**绑定层的方法面比 `VikingFS` 更宽，但宽出来的部分是桩**。`chmod` 是真实现（`lib.rs:2093` 调到 `top.chmod()`，返回 `chmod ok`）；而 `digest` 是**桩**——`lib.rs:2490-2494` 直接 `Err(PyRuntimeError::new_err("digest not yet implemented in ragfs-python"))`；`read(stream=true)` 同样是桩（`lib.rs:1871` `"Streaming not supported in binding mode"`）。所以「绑定层更宽」指的是**方法签名存在**，不是**能力可用**——引用这些方法名时别当成已实现的功能。反向的缺口也存在：`VikingFS.find()`（语义检索，`openviking/storage/viking_fs/_semantic.py:196`）在绑定层没有对应方法。Python 操作面的裁剪（无 chmod、find=语义）是产品决策不是能力边界（呼应 [`../vfs/03`](../vfs/03-operation-semantics.md)）。
 
 ## B. C++ 引擎内部（src/）
 
@@ -51,7 +51,7 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 ### B2. 索引结构：内存扫描 + SIMD，无图索引
 
 - Python 侧索引类层级：`LocalIndex`（基类，`local_index.py:358`）→ `VolatileIndex`（内存态，`:1280`）；`IndexEngineProxy` 用读写锁包 C++ 核心，并预留 `CuVSBackgroundRebuildPending`（`:103`，GPU 重建异步化）。
-- **全仓 `src/` grep 无 HNSW/IVF**——距离计算是**内存全量扫描 + x86 SIMD**（CMake 的 sse3/avx2/avx512 三变体正是为此，`src/CMakeLists.txt:270-296`）；GPU 场景走 cuVS 适配器（factory.py 白名单之一）。
+- **全仓 `src/` grep 无近似 ANN 索引**（`hnsw`/`IVF`/`faiss`/`kmeans` 全零命中）——这是源码级硬事实，成立。**但别说成"全内存扫描"或"无任何 tree index"**：`VolatileStore` 内部是 `std::map`（红黑树，`src/store/volatile_store.h:39`），持久化用 leveldb（其 memtable 也是跳表/有序结构），所以**有序结构是有的，缺的是近似最近邻**。另外 C++ 侧**没有叫 `VolatileIndex` 的类型**——`grep -rn VolatileIndex src/` 零命中，那个名字只存在于 Python（`openviking/storage/vectordb/index/local_index.py:1280`）；C++ 的类型是 `VolatileStore`。距离计算走 x86 SIMD 三变体（`src/CMakeLists.txt:270-296`），GPU 场景走 cuVS 适配器（`vectordb_adapters/factory.py` 白名单之一）。
 - 【解释】这解释了两个现象：① 为什么 `ov status` 之外还有 `system consistency` 命令（索引与内容是两套持久化，需要对账）；② 为什么大规模数据的"local"后端定位是单机中小规模——扫描型索引的查询延迟随向量数线性，云上规模要靠 vikingdb/cuvs。
 - collection schema 关键字段：`uri(path)` / `level(int64)`（L0=.abstract.md、L1=.overview.md、L2=原文，`openviking/storage/collection_schemas.py:115-119` 注释原话——注意模块在 `openviking/storage/` 下，**不在** `vectordb/store/`）/ `content(text)` / 向量字段。
 
