@@ -82,7 +82,7 @@
 
 > 待建维度：无——六个维度已齐（`_change_log` / `core` / `integration` / `architecture` / `harness` / `vfs`）；各维度内部待补篇目见各 README。
 
-> **维护工具**：`_tools/check_anchors.py` 会把本目录与 `_faq_on_digested/` 里所有 `文件:行号` 锚点解析到工作树做边界校验（NOFILE / OOB / BADPATH，含不带行号的裸路径）。同步上游后先跑一遍 `--strict`。用法与已知盲区见 [`_tools/README.md`](_tools/README.md)；**它管不到的内容层缺陷**（伪造引文、版本归因、假否定断言等八类）见 [`_tools/REVIEW_PROTOCOL.md`](_tools/REVIEW_PROTOCOL.md)——复核时两份一起用。
+> **维护工具**：`_tools/check_anchors.py` 会把本目录与 `_faq_on_digested/` 里所有 `文件:行号` 锚点解析到工作树做边界校验（NOFILE / OOB / BADPATH，含不带行号的裸路径）。同步上游后先跑一遍 `--strict`；改完任何一条**在多处重复出现的事实**后，再跑 [`_tools/check_half_fixes.py`](_tools/check_half_fixes.py) 查半修残留。用法与已知盲区见 [`_tools/README.md`](_tools/README.md)；**它管不到的内容层缺陷**（伪造引文、版本归因、假否定断言等八类）见 [`_tools/REVIEW_PROTOCOL.md`](_tools/REVIEW_PROTOCOL.md)——复核时两份一起用。
 
 > **2026-10-19 行为级复核轮**：文档基线搬到 `v0.5.0` 之后，锚点第一次可以被机器校验，由此暴露了一批"基础设施没变"的错误概括。本轮逐维度复核了 `vfs/`（5 篇 + README）与 `harness/`（8 篇 + 5 个 README）的行为性结论，并修掉若干陈数（`tests/` 测试文件 655→730、`tests/` 顶层子目录 32→31、`harness/1.2` 的三组枚举计数 6/26/15→11/29/17；逐条见 `_change_log/0003` §2.5 与 §四之二）。**注**：`tests/` 顶层子目录现为 31，引用这个数时要说明是"`tests/` 直接子目录"而非"全仓测试目录"。**教训写在这里**："某层没变"是最容易错、也最难被锚点检查发现的断言——它不指向任何一行代码，却会误导整篇。详见 [`_change_log/0003`](_change_log/0003-post-v0.5.0-audit.md)。
 

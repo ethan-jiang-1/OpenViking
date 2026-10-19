@@ -43,14 +43,14 @@ import sys
 # 本套文档里已被撤回/证伪、但仍可能以肯定形式残留在别处的断言
 KNOWN_RETRACTED = [
     "heartbeat 删除",
-    "heartbeat\*\* 删除",
+    "heartbeat** 删除",
     "两次兑现",
     "兑现了两次",
     "实打实发生了两次",
-    "全部仍有效",
     "无一处需要改",
     "v0.5.0 又演示了第二次",
-    "prune_orphans",
+    # 注意：「prune_orphans」不列入——它只在"版本间变化"台账里以"已删除"形式出现，那是正确用法
+
     "use_rerank=False",
     "future updates will be centrally published there",
     "人类认知模式的简化映射",
@@ -60,7 +60,8 @@ KNOWN_RETRACTED = [
 # 出现即视为"这行是在讲它已失效"，跳过
 RETRACT_MARKERS = (
     "撤回", "~~", "从未", "零命中", "不存在", "已删", "实为",
-    "不是", "错", "该端点", "非死锚",
+    "不是", "错", "该端点", "非死锚", "编的", "那句话是", "曾引", "曾写", "曾把",
+    "本身还在", "已被", "仍在断言",
 )
 
 SCAN_GLOBS = ("_digested/**/*.md", "_faq_on_digested/**/*.md")
@@ -80,7 +81,14 @@ def scan(phrases, quiet=False):
                 lines = io.open(f, encoding="utf-8").read().splitlines()
             except OSError:
                 continue
+            in_fence = False
             for n, line in enumerate(lines, 1):
+                # 代码围栏内是示例/探针，不是文档断言
+                if line.lstrip().startswith("```"):
+                    in_fence = not in_fence
+                    continue
+                if in_fence:
+                    continue
                 if ph not in line:
                     continue
                 if any(m in line for m in RETRACT_MARKERS):
