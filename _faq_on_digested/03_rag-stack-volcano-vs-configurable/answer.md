@@ -67,7 +67,8 @@
 3. **火山全家桶（功能最全）**：volcengine multimodal/sparse/hybrid embedding + vikingdb rerank + 云 VikingDB/私有化 + BM25 grep + Ark 媒体理解。
 4. **混合任意组合**：例如"火山 embedding + 本地向量库"、"OpenAI embedding + 火山云 VikingDB"——四自由度互不绑定。
 
-**一句话选型判据**：如果你的数据量需要关键词召回（BM25）或混合检索（dense+sparse），火山系后端是唯一通道；如果只要语义检索 + 精排，模型层完全不需要火山。
+**一句话选型判据**：如果你的数据量需要 **BM25 加速**的关键词召回、或混合检索（dense+sparse），**火山系后端是唯一通道**；如果只要语义检索 + 精排，模型层完全不需要火山。
+> ⚠️ **2026-10-19 第五轮修正**：原文把“关键词召回”与“BM25”折叠成一个条件。**关键词召回本地就有**——`viking_fs/_grep.py:150-166` 的 `_resolve_grep_engine` 在非火山后端会 `return "fs"`，走本地全文 regex 扫描；只是没有 BM25 的粗召回加速。所以准确说法是：**要“快”的关键词召回得配火山；要“有”关键词召回，本地 `grep` 就能给，代价是全量扫描。**另一处相关事实：`local_collection.search_by_keywords` 直接 `raise NotImplementedError`（`local_collection.py:734,758`）——本地 collection 层确实没有关键词检索，关键词能力在 `viking_fs` 的 grep 层，不在 vectordb 层。
 
 ## 状态标注
 
