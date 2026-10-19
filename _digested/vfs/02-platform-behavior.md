@@ -88,12 +88,6 @@ Quickstart 明文三 OS（`docs/en/getting-started/02-quickstart.md:10`，中文
 
 【解释】给 Windows 用户的实用排序：**pip wheel（x64）> 官方 Linux 容器（Docker Desktop）> MinGW 源码编译**；ARM Windows 设备目前只能走容器路径。
 
-## 状态标注
-
-- 硬事实：矩阵中全部锚点；四档划分依据
-- 解释：MinGW 选择的动机归因；`\\?\` "隐式能力"定性；Windows 用户路径排序
-- 未定：SMB 网络盘上 PathLock/filelocks 行为；`_test_full.yml` 空壳是有意降级还是未完成
-
 ## v0.5.0 复核：localfs 重写后风险表仍成立，锚点全部换代（2026-10-19）
 
 `crates/ragfs/src/plugins/localfs/mod.rs` 在 v0.5.0 被重写 **819 行**（主要是 grep 去外部依赖，见 [`03`](03-operation-semantics.md) 末节）。结果：
@@ -101,3 +95,9 @@ Quickstart 明文三 OS（`docs/en/getting-started/02-quickstart.md:10`，中文
 - **9 条风险的结论全部仍然成立**——`rename` 的两平台分裂、`chmod` no-op、就地写无 temp+rename、大小写零防护等，逐条对着新代码复核过。
 - **但 4 条锚点全部失效**（文件头部的 ripgrep 探测代码删除，整体行号上移）：`rename` 1171→**1014**、`chmod` 1257→**1117**、`write` 1010→**855**、`canonicalize` 63→**124**。已就地改正，旧行号保留在括号里以便对照。
 - 顺带确认一条**仍然成立的关键设计**：Windows 的 `rename` 覆盖走 `MoveFileExW(MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH)`（`:1094-1097`）——这与风险 1 描述的行为一致，说明"Windows 分支特殊处理过这里"是**旧版就有的实现**，不是本轮新增。
+
+## 状态标注
+
+- 硬事实：矩阵中全部锚点；四档划分依据
+- 解释：MinGW 选择的动机归因；`\\?\` "隐式能力"定性；Windows 用户路径排序
+- 未定：SMB 网络盘上 PathLock/filelocks 行为；`_test_full.yml` 空壳是有意降级还是未完成

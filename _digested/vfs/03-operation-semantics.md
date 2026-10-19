@@ -74,11 +74,6 @@ grep / grep_file / glob_directory / tree_directory
 3. 权限控制只设计 ACL，别设计权限位；Windows 上密钥文件保护需自行补（0600 仅 unix）。
 4. 并发写同一文件必须走 PathLock 约定路径；绕锁的加密写是 last-writer-wins（[`02`](02-platform-behavior.md) 风险 6）。
 
-## 状态标注
-
-- 硬事实：动词表锚点、no-op chmod、append 重写、find 固定 QUICK
-- 解释："文件系统接口形状的数据库 API"定性；操作建议（写作纪律）
-
 ## v0.5.0 复核：grep 的外部依赖被拆掉了（2026-10-19）
 
 原文这一行写的是"正则内容搜索 + ACL 过滤 + **rg fallback**"，锚在 `localfs/mod.rs:66-72`——那一段是构造时探测 `rg` 是否在 PATH 里（`Command::new("rg").arg("--version")`，结果存进 `has_rg` 字段），有就走 `grep_via_rg`（`Command::new("rg").arg("--json")` 子进程），没有才退回进程内实现。
@@ -93,3 +88,8 @@ grep / grep_file / glob_directory / tree_directory
 | 上下文行（before/after context） | — | 新增 `GrepLineCollector`（`core/grep.rs:8`），含相邻命中与文件边界的处理 |
 
 **判断**：这是一次**去外部依赖**的收敛——行为等价面更大（不再受"宿主机有没有装 rg"影响，三平台表现更一致），代价是丢掉 rg 的 SIMD 优化，大仓库 grep 可能变慢。文档原来那句"生产代码跨平台"的方向反而更成立了，但依据换了。
+
+## 状态标注
+
+- 硬事实：动词表锚点、no-op chmod、append 重写、find 固定 QUICK
+- 解释："文件系统接口形状的数据库 API"定性；操作建议（写作纪律）

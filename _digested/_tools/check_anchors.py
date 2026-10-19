@@ -96,11 +96,29 @@ def check(strict):
                     cited, first, second = match.group(1), int(match.group(2)), match.group(3)
                     highest = max(first, int(second)) if second else first
                     stats["total"] += 1
-                    candidates = index.get(os.path.basename(cited), [])
+                    base = os.path.basename(cited)
+                    candidates = index.get(base, [])
                     if not candidates:
                         stats["nofile"] += 1
                         findings.append((rel_doc, lineno, cited, highest, "NOFILE"))
                         continue
+                    # If the citation names directories, at least one real file
+                    # must END with that path -- otherwise the doc points at a
+                    # directory that does not exist, and basename matching would
+                    # silently pass it (e.g. parse/parsers/registry.py).
+                    if "/" in cited:
+                        tail = cited.lstrip("./")
+                        exact = [c for c in candidates
+                                 if ("/" + c[0].replace(os.sep, "/").lstrip("./")).endswith("/" + tail)]
+                        if not exact:
+                            stats["badpath"] += 1
+                            findings.append(
+                                (rel_doc, lineno, cited, highest,
+                                 "BADPATH (no file ends with %s; basename exists at %s)"
+                                 % (tail, ", ".join(c[0] for c in candidates[:2])))
+                            )
+                            continue
+                        candidates = exact
                     if any(n >= highest for _, n in candidates):
                         stats["ok"] += 1
                         continue
@@ -112,7 +130,7 @@ def check(strict):
                     )
 
     print("scanned %d docs" % len(docs))
-    for key in ("total", "ok", "oob", "nofile", "skipped_tombstone"):
+    for key in ("total", "ok", "oob", "nofile", "badpath", "skipped_tombstone"):
         print("  %-18s %d" % (key, stats[key]))
 
     if findings:

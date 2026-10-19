@@ -190,7 +190,7 @@ connecting to a local server without root_api_key (dev mode)」。
 ## 6. LangChain 集成
 
 【硬事实】
-- `integrations/langchain/pyproject.toml:6` 包名 `langchain-openviking`（独立 pip 包，
+- `examples/langchain/pyproject.toml:6` 包名 `langchain-openviking`（独立 pip 包，**v0.5.0 复核：目录是 `examples/langchain/`，原写 `integrations/langchain/` 不存在**，
   tag_regex `^langchain-openviking@` :67）。
 - README.md:3-5：「official OpenViking integration package for LangChain and LangGraph …
   communicates with remote OpenViking instances through the lightweight `openviking-sdk`」。
