@@ -61,7 +61,9 @@ OpenViking 的根本不是"一个带 RAG 的存储"，而是一个**品类主张
 
 ## 诚实的坑（评价任何集成方案前先读这段）
 
-1. **原件保不保留是"分类型"的——别按"一律不保留"理解**。博客边界表原话："Original files — **Not retained by default**; still being refined"，这是官方主张；但代码实态**按内容类型分裂**（2026-09-13 复核修正：此前版本写成"没有原样归档通道"，系误判）：**文档类**（如 PDF）确实入库即转换、源文件不归档（`parse/parsers/pdf.py` 只落 markdown + 提取图片）；**媒体类默认保留原件**——video/audio 解析第一步就是 `Save original ... with original filename`（`parse/parsers/media/video.py:98`、`audio.py:104`，经 `write_file_bytes`，`storage/viking_fs/_ops.py:1719`），小图同样存原始字节（`image.py:246`），仅大图显式不存（`image.py:190` 原话 "The original file is intentionally NOT saved"）。AGFS 本身有原样字节通道，"不保留"是解析器策略而非存储层限制。对合规/审计/精确引用场景：**逐内容类型确认**，不要引用一概而论的口径。
+1. **原件保不保留是"分类型"的——别按"一律不保留"理解**。博客边界表原话："Original files — **Not retained by default**; still being refined"，这是官方主张；但代码实态**按内容类型分裂**（2026-09-13 复核修正：此前版本写成"没有原样归档通道"，系误判）：**文档类**（如 PDF）确实入库即转换、源文件不归档（`parse/parsers/pdf.py` 只落 markdown + 提取图片）；**媒体类默认保留原件**——video/audio 的 `parse()` docstring 原话是 "only copy original file and extract basic metadata"（`parse/parsers/media/video.py:60`、`audio.py:66`），实际写入 `await writer.write_bytes(f"{root_dir_name}/{original_filename}", ...)`（`video.py:123`、`audio.py:130`，`writer` 是 `openviking/parse/output.py:192` 的 `write_bytes`）；小图同样存原始字节（`image.py:257`），仅大图显式不存（`image.py:202` 原话 "The original file is intentionally NOT saved"）。
+
+> ⚠️ **这一格的锚点此前全错**（2026-10-19 修正）：原文写 `Save original ... with original filename`（`video.py:98`/`audio.py:104`）——**"Save original" 这个字符串在源码里不存在**；写的是 `write_file_bytes` 且锚到 `storage/viking_fs/_ops.py:1719`——`:1719` 实际是列表循环里的 `modTime`/RFC-3339 解析，与写入无关；`image.py:246`/`:190` 也各偏 11/12 行。**结论（媒体保留原件、大图不存）是对的，但五处引用没有一处可用**——这正是"结论对所以没人查引用"的典型样本。AGFS 本身有原样字节通道，"不保留"是解析器策略而非存储层限制。对合规/审计/精确引用场景：**逐内容类型确认**，不要引用一概而论的口径。
 2. **server-first 的部署重量**。没有嵌入式用法，最小试用也要跑起 Python+Rust+C++ 三层（[`integration/01`](integration/01-start-here.md)）。
 3. **检索的"聪明"有前提**：v0.5.0 起检索**不再有目录递归**——两种模式都是「一次全局向量召回」，差别只在 THINKING 会对候选做一遍 rerank（[`core/03`](core/03-retrieval-global-recall.md)）。所以"聪明"= 配了 rerank 模型，没配就是一次扁平向量检索。热度加权与父级分数传播已随 v0.5.0 删除。
 

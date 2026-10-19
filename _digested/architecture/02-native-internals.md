@@ -45,15 +45,15 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 |---|---|---|
 | `openviking.vectordb.IndexEngine` | 向量索引核心 | `index/local_index.py` 的 IndexEngineProxy（RWLock 包裹，`:62,107`） |
 | `openviking.vectordb.KVStore` | leveldb 持久化 KV | `store/local_store.py` |
-| `openviking.vectordb.Schema` | collection schema 定义 | `store/serializable.py:10`（经 `bytes_row.py:310` `Schema = engine.Schema`；`collection_schemas.py` 只定义字段 dict，不 import engine） |
+| `openviking.vectordb.Schema` | collection schema 定义 | `store/serializable.py:10`（**这一行是 import 语句**：`from openviking.storage.vectordb.store.bytes_row import BytesRow, FieldType, Schema`——真正的别名在 `bytes_row.py:335` `Schema = engine.Schema`，引擎不可用时 `:340` 回落到 `_PySchema`；`collection_schemas.py` 只定义字段 dict，不 import engine） |
 | `openviking.vectordb.BytesRow` | 行编码 | `store/bytes_row.py` |
 
 ### B2. 索引结构：内存扫描 + SIMD，无图索引
 
-- Python 侧索引类层级：`LocalIndex`（基类，`local_index.py:347`）→ `VolatileIndex`（内存态，`:1257`）；`IndexEngineProxy` 用读写锁包 C++ 核心，并预留 `CuVSBackgroundRebuildPending`（`:103`，GPU 重建异步化）。
+- Python 侧索引类层级：`LocalIndex`（基类，`local_index.py:358`）→ `VolatileIndex`（内存态，`:1280`）；`IndexEngineProxy` 用读写锁包 C++ 核心，并预留 `CuVSBackgroundRebuildPending`（`:103`，GPU 重建异步化）。
 - **全仓 `src/` grep 无 HNSW/IVF**——距离计算是**内存全量扫描 + x86 SIMD**（CMake 的 sse3/avx2/avx512 三变体正是为此，`src/CMakeLists.txt:270-296`）；GPU 场景走 cuVS 适配器（factory.py 白名单之一）。
 - 【解释】这解释了两个现象：① 为什么 `ov status` 之外还有 `system consistency` 命令（索引与内容是两套持久化，需要对账）；② 为什么大规模数据的"local"后端定位是单机中小规模——扫描型索引的查询延迟随向量数线性，云上规模要靠 vikingdb/cuvs。
-- collection schema 关键字段：`uri(path)` / `level(int64)`（L0=.abstract.md、L1=.overview.md、L2=原文，`collection_schemas.py:103-114` 注释原话）/ `content(text)` / 向量字段。
+- collection schema 关键字段：`uri(path)` / `level(int64)`（L0=.abstract.md、L1=.overview.md、L2=原文，`openviking/storage/collection_schemas.py:115-119` 注释原话——注意模块在 `openviking/storage/` 下，**不在** `vectordb/store/`）/ `content(text)` / 向量字段。
 
 ### B3. 持久化
 

@@ -34,10 +34,10 @@ vectordb (Python) --LocalCollectionAdapter--> _native / _x86_{sse3,avx2,avx512} 
 
 - C++ 侧：`src/abi3_engine_backend.cpp:3`（`#define Py_LIMITED_API 0x030A0000`；同一常量的编译定义在 `src/CMakeLists.txt:229`）、`:2085-2091`（`PyModuleDef` 的 `m_name` 是 `"_ov_engine_backend"`——**但这不是任何可 import 的模块名**）；构建按 x86 变体分 MODULE（变体清单 `src/CMakeLists.txt:8`，x86 sse3/avx2/avx512 循环 `:270-295`、`_x86_caps` `:297-309`，MODULE 模板函数 `:224-239`），链 leveldb（`:124-129`）
 
-> **⚠️ 实证更正（baseline 即错）**：`_ov_engine_backend` 只是 C++ 源码里 `PyModuleDef` 的**内部名字符串**，真实落盘的扩展模块名由 CMake 的 `OUTPUT_NAME` 决定，只有四个：`_native`（`src/CMakeLists.txt:339` `ov_add_python_backend("native", "_native", ...)`）、`_x86_sse3` / `_x86_avx2` / `_x86_avx512`（`:270-295` 循环）。Python 侧 `_BACKEND_MODULES` 加载的也正是这四个名字（`engine/__init__.py:16-21`）。旧文（含 `callgraph.svg`）把 `_ov_engine_backend` 当成模块名是**错的**，且这个错在 `0f77ab56` 就存在，与 v0.5.0 无关。
-- Python 侧加载：`storage/vectordb/engine/__init__.py:16-21` `_BACKEND_MODULES = {x86_sse3: "_x86_sse3", x86_avx2: "_x86_avx2", x86_avx512: "_x86_avx512", native: "_native"}`；优先级 `_X86_PRIORITY` `:23`；`OV_ENGINE_VARIANT` 环境变量读取 `:116`；`_ENGINE_BACKEND_API == "abi3-v1"` 校验 `:187-188`
+> **⚠️ 实证更正（baseline 即错）**：`_ov_engine_backend` 只是 C++ 源码里 `PyModuleDef` 的**内部名字符串**，真实落盘的扩展模块名由 CMake 的 `OUTPUT_NAME` 决定，只有四个：`_native`（`src/CMakeLists.txt:339` `ov_add_python_backend("native", "_native", ...)`）、`_x86_sse3` / `_x86_avx2` / `_x86_avx512`（`:270-295` 循环）。Python 侧 `_BACKEND_MODULES` 加载的也正是这四个名字（`engine/__init__.py:17-22`）。旧文（含 `callgraph.svg`）把 `_ov_engine_backend` 当成模块名是**错的**，且这个错在 `0f77ab56` 就存在，与 v0.5.0 无关。
+- Python 侧加载：`storage/vectordb/engine/__init__.py:17-22` `_BACKEND_MODULES = {x86_sse3: "_x86_sse3", x86_avx2: "_x86_avx2", x86_avx512: "_x86_avx512", native: "_native"}`；优先级 `_X86_PRIORITY` `:24`；`OV_ENGINE_VARIANT` 环境变量读取 `:116`；`_ENGINE_BACKEND_API == "abi3-v1"` 校验 `:187-188`
 - 调用方：`storage/vectordb/index/local_index.py:14`、`store/local_store.py:5`、`store/bytes_row.py:303-306`
-- 默认后端：`openviking_cli/utils/config/open_viking_config.py:778` `storage.vectordb.backend` 默认 `"local"`——**开箱即用的向量索引就是这套 C++ 引擎**；适配器注册表 `storage/vectordb_adapters/factory.py:15-21`（local / cuvs / http / volcengine / vikingdb）
+- 默认后端：`storage.vectordb.backend` 默认 `"local"`——默认值定义在 `openviking_cli/utils/config/vectordb_config.py:403-411`（`backend: str = Field(default="local")`）；`open_viking_config.py:815-816` 是 `or "local"` 的兜底点（旧文锚 `:778`，那是 `initialize_openviking_config` 内部，不是默认值定义处）——**开箱即用的向量索引就是这套 C++ 引擎**；适配器注册表 `storage/vectordb_adapters/factory.py:16-24`（**6 项**：local / cuvs / http / volcengine / vikingdb / **opengauss**）
 
 ## 两组"abi3"撞名陷阱
 
