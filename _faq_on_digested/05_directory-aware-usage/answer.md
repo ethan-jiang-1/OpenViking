@@ -2,7 +2,7 @@
 
 ## 一句话判断
 
-Directory-Aware（TrieHI/DSQ/DSM）优化的不是"能不能搜到"，而是**"在目录作用域上做检索与维护"这件事本身**。它隐含三条使用要求：① 内容按**目录组织**，且目录名 + L0 摘要是检索第一跳的全部信号；② 查询表达成**带作用域的检索**（论文 IV-C 的适用前提：*"Queries often start from a directory scope and request coherent descendants, such as a project subtree or a user-memory branch."*）；③ **结构会演化**（MOVE/MERGE 是设计目标）。不满足这三条的用法（平铺内容、泛化目录名、全库查询、只走 find/QUICK）吃不到红利，还可能更慢。
+Directory-Aware（TrieHI/DSQ/DSM）优化的不是"能不能搜到"，而是**"在目录作用域上做检索与维护"这件事本身**。它隐含三条使用要求：① 内容按**目录组织**，且目录名 + L0 摘要是检索第一跳的全部信号（**注意：这一条在 OpenViking v0.5.0 已不成立**，见下方反转记录；此处保留的是论文侧的适用前提）；② 查询表达成**带作用域的检索**（论文 IV-C 的适用前提：*"Queries often start from a directory scope and request coherent descendants, such as a project subtree or a user-memory branch."*）；③ **结构会演化**（MOVE/MERGE 是设计目标）。不满足这三条的用法（平铺内容、泛化目录名、全库查询、只走 find/QUICK）吃不到红利，还可能更慢。
 
 ## 场景化文档（图文版，一个场景一个 MD）
 
@@ -17,7 +17,8 @@ Directory-Aware（TrieHI/DSQ/DSM）优化的不是"能不能搜到"，而是**"�
 
 ## 三条使用契约（跨场景总纲）
 
-1. **目录 = 语义容器**：THINKING 第一跳只向量检索 L0/L1 目录记录（`hierarchical_retriever.py:227`，`level=[0,1]`），rerank 打目录 abstract（`:279-283`）——**目录名有区分度、L0 摘要写成检索摘要**，是第一跳的全部信号；embedding 白名单只有 `directory` 字段（`03-context-layers.md:128-138`），元数据靠 `scope_dsl` 过滤。
+1. ~~**目录 = 语义容器**：THINKING 第一跳只向量检索 L0/L1 目录记录（`hierarchical_retriever.py:227`，`level=[0,1]`），rerank 打目录 abstract（`:279-283`）~~ **v0.5.0 起这条作废，且原文的锚点是错的**（2026-10-19 修正）：全文已无 `level=[0,1]` 这个常量，`level` 现在**只来自调用方**（`hierarchical_retriever.py:101` 入参、`:191`/`:201` 透传），唯一的内部覆盖是 `:136-137` 的图像查询 `level=[2]`；不传 `level` 就是**全层召回，L0/L1 不再是"第一跳"**。原文引的 `:227` 在 v0.5.0 是 rerank 打分循环，`:279-283` 也已不是那个位置。
+   **仍然成立的半条**：embedding 白名单只有 `directory` 字段（`03-context-layers.md:128-138`），元数据靠 `scope_dsl` 过滤——即"目录名要有区分度"这个**写作建议**依然有效，但它的机制基础（L0/L1 独立第一跳）没了。
 2. **查询 = 作用域检索**：带 `target_uri`/`scope_dsl` = 论文的 DSQ；论文 Figure 11：*"retrieval quality generally improves as the query path becomes more specific"*——**作用域越具体，质量越高**；~~目录红利只在 THINKING（`search()`；`find()` 固定 QUICK 无递归，`_semantic.py:285`；没配 rerank 默认 QUICK，`hierarchical_retriever.py:126-127`）~~ **v0.5.0 起这条作废**：`THINKING`/`QUICK` 现在只决定"recall 之后要不要 rerank"，**没有任何递归**（`hierarchical_retriever.py:110-113`）；`find()` 仍固定 `mode=QUICK`（`_semantic.py:305-306`），`search()` 没配 reranker 时仍默认 `QUICK`（`hierarchical_retriever.py:122-123`），但两者的差别只剩 rerank，不再是"目录递归 vs 扁平"。
 3. **结构 = 可演化**：MOVE/MERGE 是 DSM 的目标负载（TrieHI 下 tree-local：子树重挂 + 祖先聚合更新，论文 V-C）；重组后等 `freshness` 冒泡（`pending_child_changes`）再检索。
 

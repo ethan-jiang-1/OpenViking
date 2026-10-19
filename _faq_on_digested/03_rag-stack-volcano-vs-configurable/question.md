@@ -2,7 +2,7 @@
 
 ## 背景
 
-翻 `_digested/` 和源码时注意到 OpenViking 的检索链路横跨多个模型层组件：embedding（还有 dense/sparse/hybrid 三种模式）、rerank、VLM（L0/L1 摘要）、向量库后端、grep 关键词检索。README 的评测口径全部用 Doubao 模型（`README_CN.md:103`），changelog 里又有 "VikingDB BM25 grep"（v0.4.6），直觉上像是个火山系全家桶产品。但 `_digested/_notes/seams-boundaries-evidence.md` 又说 embedding 有 13 个 provider、任意 OpenAI 兼容端点可配。
+翻 `_digested/` 和源码时注意到 OpenViking 的检索链路横跨多个模型层组件：embedding（还有 dense/sparse/hybrid 三种模式）、rerank、VLM（L0/L1 摘要）、向量库后端、grep 关键词检索。README 的评测口径全部用 Doubao 模型（`docs/repository/README_CN.md:113`），changelog 里又有 "VikingDB BM25 grep"（v0.4.6），直觉上像是个火山系全家桶产品。但 `_digested/_notes/seams-boundaries-evidence.md` 又说 embedding 有 13 个 provider、任意 OpenAI 兼容端点可配。
 
 直觉与既有材料冲突，需要搞清楚**"火山依赖"到底锁在哪些层、哪些层是宽门**：
 

@@ -57,7 +57,14 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 
 ### B3. 持久化
 
-leveldb 为仓内 vendored 静态库（`CMakeLists.txt:75`），经 KVStore capsule 提供 KV 持久化；向量数据在内存中服务查询、落盘交给 KVStore——崩掉后由 Python 侧重建/加载（与内容层 AGFS 完全独立，"Single data source: All content read from AGFS" 的官方设计口径，`docs/en/concepts/05-storage.md:32`）。
+leveldb 为仓内 vendored 静态库（`CMakeLists.txt:75`），经 KVStore capsule 提供 KV 持久化；向量数据在内存中服务查询、落盘交给 KVStore——崩掉后由 Python 侧重建/加载（与内容层 AGFS **可分别配置**）。
+
+> ⚠️ **2026-10-19 更正：原文在这里引了一句官方原文，那句话并不存在**。原文写："与内容层 AGFS 完全独立，"Single data source: All content read from AGFS" 的官方设计口径，`docs/en/concepts/05-storage.md:32`"。实测：
+> - `docs/` 全树搜 `single data source` / `all content read from AGFS` **零命中**；`05-storage.md:32` 是 URI 映射代码块（`viking://resources/docs/auth → /local/{account_id}/...`），不是这句话。
+> - 官方真正的同义表述在 `docs/en/concepts/01-architecture.md:142`：*"**Single Data Source** | RAGFS holds source files; vector records retain the text and metadata needed for retrieval"*——意思是"源文件只有一份在 RAGFS"，**不是**"两套存储完全独立"。
+> - 而且紧接着的 `docs/en/concepts/05-storage.md:18` 明说：*"Memory records store their body text in the abstract field, capped at 50,000 bytes, so the vector index can contain readable text."* ——**向量库里确实有可读正文**。所以"完全独立"这个结论本身也是错的，官方口径恰恰是"两套存储都要备份、都要管访问控制"（`:20`）。
+>
+> **正确的表述**：AGFS 与向量库是**两个可独立配置的后端**，源文件在 AGFS、检索所需的文本与元数据（含 ≤50 KB 的记忆正文）在向量库——**存在有意的数据冗余，不是完全独立**。
 
 ## C. 修正与加深 architecture/01 的两点
 
