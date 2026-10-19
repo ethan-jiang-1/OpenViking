@@ -64,7 +64,7 @@
 
 - **~34.5K stars、GitHub 月榜第 8**（截至 2026-08-31，[七牛云深度解析](https://news.qiniu.com/archives/1788141049000)）；最新 release v0.4.17（2026-08-28）。
 - 生态面：Claude Code/Codex/Cursor/OpenClaw/OpenCode 官方集成 + 三语言 SDK + LoCoMo/tau2-bench 公开评测 + 学术侧 VikingMem 论文（arXiv:2605.29640）。
-- 【解释】**viking:// 的"进语料"通道与 OKF 不同且正交**：OKF 靠静态文件在仓库里繁殖，viking:// 靠 (a) 产品装机量让集成文档/教程/issue 进语料，(b) **运行时自描述**——MCP 工具描述在运行时教模型，不依赖训练先验（这正是 `_digested/harness/02,04` 的设计）。OKF 需要模型"预先认识"，viking:// 不需要。
+- 【解释】**viking:// 的"进语料"通道与 OKF 不同且正交**：OKF 靠静态文件在仓库里繁殖，viking:// 靠 (a) 产品装机量让集成文档/教程/issue 进语料，(b) **运行时自描述**——MCP 工具描述在运行时教模型，不依赖训练先验（这正是 [`_digested/harness/04-Self-Description/4.2`](../../_digested/harness/04-Self-Description/4.2_docs_for_agents.md) 判断 1「运行时的 agent 自描述是模范级的」）。OKF 需要模型"预先认识"，viking:// 不需要。
 
 **结论（对用户假设的回答）**：
 

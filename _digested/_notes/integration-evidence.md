@@ -34,10 +34,10 @@ FastAPI server（默认 `http://127.0.0.1:1933`）：
 - 挂载点：`openviking/server/app.py:809`（`_ScopedRoute` 定义 `:797`）— `_ScopedRoute("/mcp", endpoint=create_mcp_app(),
   methods=["GET","POST","DELETE"])`；`create_mcp_app` 定义在 mcp_endpoint.py:**2208**（旧基线 `:1538`，该处现在是 add_resource 的分支逻辑）。
 - MCP session manager 生命周期绑在 FastAPI lifespan：app.py:**381-383**（`from ... import mcp_lifespan` / `async with mcp_lifespan()`；旧基线 `:388-390`，该处现在是 metrics 与 usage_audit 的清理）。
-- 工具清单（**`v0.5.0` 实测 20 个**，`mcp_endpoint.py:5-7` docstring 自述"registrations below are the authoritative list"）：
+- 工具清单（**`v0.5.0` 实测 20 个**，`mcp_endpoint.py:5-7` docstring 自述"registrations below are the authoritative list"；行号统一取 **`@mcp.tool` 装饰器行**，与 `integration/01`、`03` 一致）：
   `list_users`(:356) `list_groups`(:394) `get_acl`(:407) `set_acl`(:417) `find`(:449) `search`(:509)
   `read`(:852) `list`/`ls`(:1005) `tree`(:1087) `remember`(:1167) `write`(:1203) `edit`(:1250)
-  `add_resource`(:1422) `add_skill`(:1728) `list_watches`(:1898) `cancel_watch`(:1931)
+  `add_resource`(:1422) `add_skill`(:1727) `list_watches`(:1898) `cancel_watch`(:1931)
   `grep`(:1975) `glob`(:2050) `forget`(:2079) `health`(:2095)。
   **旧基线（15 个）**的锚点是 `find`(:249) `search`(:276) `read`(:501) `ls`(:642) `tree`(:704) `remember`(:780)
   `write`(:805) `edit`(:845) `add_resource`(:999) `list_watches`(:1258) `cancel_watch`(:1290)
