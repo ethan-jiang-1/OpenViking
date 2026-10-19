@@ -1,6 +1,6 @@
 # Change Log — upstream 同步记录
 
-> **当前基线**：`v0.5.0`（`20f9c1136`，2026-10-09）。本目录是版本谱系，不随单篇文档更新；最新一条记录是 [`0002`](0002-v0.4.19-to-v0.5.0.md)。
+> **当前基线**：`v0.5.0`（`20f9c1136`，2026-10-09）。本目录是版本谱系，不随单篇文档更新；最新一条记录是 [`0003`](0003-post-v0.5.0-audit.md)（v0.5.0 之上的行为级复核轮）。
 
 本目录记录每次从 upstream（[volcengine/OpenViking](https://github.com/volcengine/OpenViking)）同步到本地后的变更摘要。每条记录包含：
 
@@ -23,6 +23,7 @@ _change_log/
   README.md
   0001-baseline-v0.4.19.md       # 初始基线：_digested/ 建立时的源码快照（0f77ab56）
   0002-v0.4.19-to-v0.5.0.md      # 第一次真同步：387 commit / 5 个 release
+  0003-post-v0.5.0-audit.md      # v0.5.0 之上的行为级复核（工具化锚点校验 + 撤回错误概括）
   ...
 ```
 
