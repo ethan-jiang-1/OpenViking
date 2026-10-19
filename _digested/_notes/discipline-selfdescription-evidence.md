@@ -30,7 +30,7 @@
 - `check-deps`（pr.yml:136 附近）：按变更路径门控——只有动了 pyproject/setup.py/uv.lock/src CMake/third_party/crates/_build.yml 才触发 `_build.yml`；动了 cuVS 相关路径才跑 `_test_lite`；动了 langchain 才跑 langchain 测试；动了 openclaw 才跑 openclaw。这是显式的路径门控（path-filtered CI）设计。
 - `langchain-tests`（pr.yml:216）是该 workflow 里唯一运行 `ruff format --check` / `ruff check` / `mypy` 的地方，但只针对 `integrations/langchain` 等路径（pr.yml:244–259）。
 
-【硬事实·关键缺口】**主 Python 包（openviking/openviking_cli）的单测在 CI 中从未运行**：
+【硬事实·关键缺口】**主 Python 包（openviking/openviking_cli）的单测主体在 CI 中没有入口**（⚠️ 原文写“从未运行”，假全称：`pr.yml` 的 `langchain-tests` job 会跑 `tests/unit/test_langchain*.py` 7 个文件、160 个 test，但条件触发）：
 - 全部 workflow 中出现 `pytest` 的只有：`_test_lite.yml`（仅 4 个 cuVS 测试文件，_test_lite.yml:86–90）、`api_test.yml`（tests/api_test 与 tests/cli 的集成测试，api_test.yml:455–550，定时+PR 触发）、`oc2ov_test.yml`（tests/oc2ov_test P0）、`api_test_effect.yml`、`pr.yml`（langchain）。
 - `_test_full.yml`（82 行）名为 "13. _Test Suite (Full)"，内容却只有：装依赖（含 `--extra test`）、`cargo check -p ragfs-python`、`uv run python setup.py build_ext --inplace`（_test_full.yml:79–82），**没有任何 pytest/lint 步骤**；且全仓库没有任何 workflow 调用它（grep `uses: ./.github/workflows/` 只有 _codeql/_docs/_docs-deploy/_build/_test_lite 五个被引用）。它是个孤儿 workflow。
 - 主包的 ruff/mypy 同样无 CI 入口（ruff/mypy 在 workflows 中只出现在 pr.yml:244–259 的 langchain job）。
