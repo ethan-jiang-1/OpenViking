@@ -79,7 +79,7 @@
 
 ## 3. 构建 / CI / 文档（agent C 完整报告要点，全部【硬事实】除注明外）
 
-### 3.1 CI 矩阵（26 个 workflow 枚举结论；2026-09-13 修正：此前写 27）
+### 3.1 CI 矩阵（**26 个 workflow** 枚举结论——**这是 `v0.4.19` 的数**；`v0.5.0` 已是 **30** 个。本节关于 CI 覆盖面的结论不受影响，但“26”别当现值引用）
 
 - `runs-on` 仅四类固定值 + matrix 变量；**无 cibuildwheel**（wheel 链路自研：setup.py + uv build + auditwheel repair，`_build.yml:290-296`）。
 - **PR 门禁仅 linux x86_64**（`pr.yml:22,106,134,219`；deps 变更时经 `_build.yml` 继承 5 平台构建 `pr.yml:206`）。

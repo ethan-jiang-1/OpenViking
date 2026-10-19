@@ -73,8 +73,8 @@
 
 ### A4. 测试基建
 
-【硬事实】tests/ 目录组织（tests/README.md:5–16 有目录说明）：29 个子目录（2026-09-13 修正：此前写 28）+ 根级 ~20 个 test_*.py；**共 655 个测试文件**（653 个 `test_*.py` + 2 个 `*_test.py`，两口径需分开报）。分布：unit/ 129、api_test/ 120、server/ 61、session/ 48、storage/ 47、parse/ 36、misc/ 31、vectordb/ 21、integration/ 21 等。
-- tests/README.md 声明的目录（client/server/session/vectordb/misc/engine/integration）与实际 29 个子目录明显不符——README 只列了 7 个，缺 unit/api_test/parse/storage 等 20+ 个（tests/README.md:7–16）。【解释】测试 README 滞后于测试目录扩张，属文档腐化。
+【硬事实】tests/ 目录组织（tests/README.md:5–16 有目录说明）：**31 个子目录**（`ls -d tests/*/ | wc -l`；`v0.4.19` 时为 29）+ 根级 `test_*.py`；**共 730 个测试文件**（728 个 `test_*.py` + 2 个 `*_test.py`，两口径需分开报）。分布（`v0.5.0` 实测，仅列前几名）：unit/ 143、api_test/ 118、server/ 71、storage/ 61、session/ 52、parse/ 39、misc/ 31、vectordb/ 26、integration/ 22 等。⚠️ 本句原列 unit/ 129、api_test/ 120、server/ 61、session/ 48、storage/ 47、parse/ 36、misc/ 31、vectordb/ 21、integration/ 21——**全是 `v0.4.19` 的分布**，且九项之和 514 远小于当时的 655，说明原文那个“等”字掩盖了漏项。**分项与总数不同源时，必须两边都标版本**。
+- tests/README.md 声明的目录（client/server/session/vectordb/misc/engine/integration）与实际 31 个子目录明显不符——README 只列了 7 个，缺 unit/api_test/parse/storage 等 20+ 个（tests/README.md:7–16）。【解释】测试 README 滞后于测试目录扩张，属文档腐化。
 - **没有 conformance 专项目录**，但有契约式测试：tests/metrics/collectors/test_collector_contracts.py、tests/prompts/test_retrieval_intent_prompt_contract.py。
 - 跳过测试纪律总体良好：19 处 `pytest.mark.skipif(..., reason=...)` 条件跳过（如 tests/misc/test_extract_zip.py:108 "Windows-specific"、tests/agfs/test_git_binding_s3.py:84 依赖外部 S3、tests/integration/conftest.py:36–67 按 API key/Vault/KMS 门控）；但另有 3 处无条件裸 `pytest.mark.skip(reason=...)`（tests/storage/test_viking_fs_git.py:49、tests/cli/test_cli_system.py:37、tests/cli/conftest.py:358）——2026-09-13 修正：此前写"22 处 skip 均为 skipif、无裸 skip"系误计。
 - pytest 配置（pyproject.toml:249–258）：testpaths=tests、asyncio_mode=auto、两个 marker（integration、cli_remote）有声明，`norecursedirs = ["api_test","oc2ov_test"]` 把重型集成测试排除出默认收集。
