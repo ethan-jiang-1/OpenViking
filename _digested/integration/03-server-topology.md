@@ -4,7 +4,7 @@
 
 ## 先给结论
 
-OpenViking server 是一个**单进程 asyncio 应用**：FastAPI 只是壳，真正的主干是 `OpenVikingService`（聚合 fs/search/session/compile 等服务的门面）+ 异步队列（v0.5.0 起 8 条）+ TaskTracker 清理循环 + MCP session manager，全部在 lifespan 里装配（`openviking/server/app.py:319-410`）。**27 个 include_router + Bot/Studio + OAuth 2.1 + /mcp**共享同一个 service 实例——这就是"server-first 但不是微服务"的含义：所有接入面在一个进程里汇合到同一棵 viking:// 树。
+OpenViking server 是一个**单进程 asyncio 应用**：FastAPI 只是壳，真正的主干是 `OpenVikingService`（聚合 fs/search/session/compile 等服务的门面）+ 异步队列（v0.5.0 起 8 条）+ TaskTracker 清理循环 + MCP session manager，全部在 lifespan 里装配（`openviking/server/app.py:319-427`）。**27 个常规 router + `bot`/`bot_studio` 2 个带前缀的特殊 router + OAuth 2.1（条件注册）+ /mcp**（`app.py:596-622` 共 28 处 `include_router`，`oauth_router` 在 `:639` 的条件分支里）共享同一个 service 实例——这就是"server-first 但不是微服务"的含义：所有接入面在一个进程里汇合到同一棵 viking:// 树。
 
 ## 装配顺序：lifespan 的十步（`app.py:319-410`）
 
@@ -41,7 +41,7 @@ OpenViking server 是一个**单进程 asyncio 应用**：FastAPI 只是壳，�
 
 旧文写"中间件三层：ExceptionMiddleware → RequestId → CORS"，漏了 A 批四层——**这是 v0.5.0 之前就漏的**（可观测性中间件栈属于既有能力，只是旧文没数）。
 
-## 入口面：27 个 router + 2 个特殊 + OAuth
+## 入口面：27 个常规 router + 2 个特殊（`bot`、`bot_studio`）+ OAuth（条件）
 
 **27 个 `include_router`**（`app.py:596-622`）：system、acl、admin、**gateway（v0.5.0 新增，`:599`）**、agent_evolution、compile、resources、filesystem、content、console、search、privacy_configs、skills、sessions、snapshot、stats、pack、debug、observer、openviking_assets、metrics、tasks、user_settings、watches、**webdav**（`prefix="/webdav/resources"`，`routers/webdav.py:26`——把 `viking://resources/...` 暴露成 WebDAV 目录，OS 文件管理器/办公软件可直接挂）。
 
@@ -80,7 +80,7 @@ Watch 与状态组：`list_watches`（:1898）、`cancel_watch`（:1931）、`he
 
 ## 状态标注
 
-- 硬事实：lifespan 十步、27 个 include_router、MCP 20 工具、auth 插件、WebDAV 前缀、六层中间件（2026-10-19 对 `v0.5.0` 快照逐个复核）
+- 硬事实：lifespan 十步（`app.py:319-427`）、**28 处 `include_router`（27 常规 + `bot`/`bot_studio`，OAuth 在条件分支另有 1 处）**、MCP 20 工具、auth 插件、WebDAV 前缀、六层中间件（2026-10-19 对 `v0.5.0` 快照逐个复核）
 - 反转记录（2026-10-19，v0.5.0）：lifespan 九步→十步（新增 `_initialize_runtime_state`）；router 24→27（+gateway、+bot_studio）；MCP 15→20；`/mcp` 挂载点 :856→:809；旧文漏记的可观测性中间件四层已补
 - 解释：队列消费者惰性启动的判断（lifespan 无显式启动代码，从 service 构造推断）；"单进程多入口"定性
 - 未定：多 worker 部署形态（uvicorn workers / gunicorn）下的队列竞争细节
