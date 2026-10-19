@@ -14,7 +14,7 @@ v0.5.0 只有**一个**检索引擎：对每个 `TypedQuery` 做**一次全局�
 
 ## 两个模式
 
-模式枚举：`openviking/retrieve/hierarchical_retriever.py:47-49` `RetrieverMode = THINKING | QUICK`。类注释 `:54` 原话："Global retriever with dense and sparse vector support."
+模式枚举：`openviking/retrieve/hierarchical_retriever.py:47-49` `RetrieverMode = THINKING | QUICK`。类注释 `:53` 原话："Global retriever with dense and sparse vector support."
 
 模式**不再是两套代码路径**，而是一个开关（`:122-126`）：
 

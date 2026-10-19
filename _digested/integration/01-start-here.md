@@ -38,7 +38,7 @@ viking:// 上下文文件系统（resources / user / agent 命名空间）
 - 默认端口 **1933**：`openviking/server/config.py:306`（`port: int = 1933`）；**gateway 默认端口 1935**（`openviking_gateway/config.py:17`）
 - server 是 FastAPI 应用：`openviking/server/app.py`；MCP session manager 在 app lifespan 内启动（`app.py:380-383`）
 - `/mcp` 路由挂载为 GET/POST/DELETE：`app.py:809`（`_ScopedRoute("/mcp", endpoint=create_mcp_app(), ...)`）
-- 官方口径："Every integration on this page connects to a running OpenViking server"（`docs/en/agent-integrations/01-overview.md:30`）
+- 官方口径："Every integration on this page connects to a running OpenViking server"（`docs/en/agent-integrations/01-overview.md:35`）
 
 ### MCP 工具面（20 个，全部定义在 server 端）
 
@@ -131,7 +131,7 @@ viking:// 上下文文件系统（resources / user / agent 命名空间）
 |---|---|---|
 | 成熟 / 官方推荐 | HTTP API + Python SDK（主包硬依赖）、内置 `/mcp`、`ov` + `openviking-server` 两个 CLI、Claude Code / Codex memory plugins | docs 主推矩阵 + `pyproject.toml:33` |
 | 正式但较新 | TS / Go SDK、agent-plugins 1.0 包、`langchain-openviking`、Web Studio、**OpenViking Gateway（自标 beta，独立进程）** | 各自 package/module 独立存在，有测试 |
-| 示例 / 实验 | `examples/pi-experimental-context-management`（README 明写 "EXPERIMENTAL, not a supported product"）、社区插件、OpenViking Helper（beta）、`ov add-memory` / `ov search`（experimental 标记） | `examples/pi-experimental-context-management/README.md:3-4`、`16-capability-reference.md:633-635` |
+| 示例 / 实验 | `examples/pi-experimental-context-management`（README 明写 "**EXPERIMENTAL.** A demo extension, not a supported product"）、社区插件、OpenViking Helper（beta）、`ov add-memory` / `ov search`（experimental 标记） | `examples/pi-experimental-context-management/README.md:3-4`、`16-capability-reference.md:633-635` |
 
 注意一个位置与定位的反差：**大量 harness 插件放在 `examples/` 目录**（claude-code、codex、cursor、pi、dsh、openclaw…），但由官方 `install.sh` 一键安装、CI 覆盖、docs 主推——位置上是 example，定位上是产品。判断成熟度看文档定位与测试覆盖，不看目录名。
 
