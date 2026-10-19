@@ -143,7 +143,7 @@ connecting to a local server without root_api_key (dev mode)」。
 ## 4. HTTP API（REST）
 
 【硬事实】
-- 路由注册：`openviking/server/app.py:645-669`，25 个 router（24 业务 + bot；2026-09-13 修正：此前写"26 个"且清单漏 `metrics_router`——现已补入，全文件另有第 26 个注册点 `oauth_router`@:686 按配置注册）。前缀清单（各 router 文件首部）：
+- 路由注册：**`v0.5.0` 实测 `openviking/server/app.py:596-622`，28 处 `include_router`**（27 常规 + `bot`@:621 + `bot_studio`@:622），另有 `oauth_router`@:639 条件注册。（旧基线口径：`645-669`、25 个 router——该区间在 v0.5.0 已整段变成 OAuth provider 构造代码，`:686` 也已不是注册点。）前缀清单（各 router 文件首部）：
   `/api/v1/acl`(acl.py:16)、`/api/v1/admin`(admin.py:60)、`/api/v1/agent-evolution`(:17)、
   `/api/v1`+compile(tasks.py 同前缀)(compile.py:13)、`/api/v1/console`(console.py:15)、
   `/api/v1/content`(content.py:103)、`/api/v1/debug`(debug.py:24)、`/api/v1/fs`(filesystem.py:27)、

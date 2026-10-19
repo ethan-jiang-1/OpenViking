@@ -11,7 +11,7 @@
 | 被集成物 | 控制流（agent loop、工具执行） | 数据（上下文文件系统 + 向量索引） |
 | 推荐接入 | `createAgentSession()` 进程内 SDK | 连 `http://localhost:1933` 的任一客户端 |
 | 无 server 能否用 | 能（SDK 进程内就是全部） | **不能**（主包无嵌入式 API，绑定只服务 server） |
-| HTTP server | 刻意没有（要 HTTP 自己包一层） | FastAPI 即产品本体（25 个 router，WebDAV 含内 + `/mcp` + 按配置 OAuth） |
+| HTTP server | 刻意没有（要 HTTP 自己包一层） | FastAPI 即产品本体（**28 处 `include_router`** = 27 常规 + `bot`/`bot_studio`，WebDAV 含内、`/mcp`、按配置 OAuth） |
 | 状态一致性 | 宿主各持 session，无共享需求 | 多 agent / 多会话共享同一棵 viking:// 树 |
 | 接入面数量 | 2 条 supported（SDK/RPC）+ 1 条 dev-only（protocol/client/server） | 7 条真实路径（MCP / Agent Plugins / harness 插件 / 3 SDK / REST / LangChain / WebDAV） |
 | 原生绑定的角色 | 无（纯 TS/JS 运行时） | 核心（Rust 内容存储 + C++ 向量引擎，缺一不可） |
