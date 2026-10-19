@@ -126,9 +126,8 @@
 
 **仍然存在的老问题**（v0.5.0 未修）：observer 里的 `"transaction"` 死分支（`main.rs:2842`）——该值永远不会被产生。
 
+## 状态标注
 
 - 硬事实：全部命令枚举与锚点（源码可复核）；与 docs 的 3 处缺漏
 - 解释：对 agent 实操含义的推演（语言门/`-o json` 的用法建议）、"agent 友好"定性
 - 未定：`chat`/`tui` 的 TUI 在 Windows 终端下的兼容细节（wrapper 用 subprocess.call 规避，issue #587，未实测）
-
-## 状态标注
