@@ -14,14 +14,17 @@ RAGFS 的内部结构比"一个文件系统库"复杂得多：**MountableFS 路�
 - **包装器洋葱**（请求穿过顺序，`core/builder.rs:125-126, 273-278` 已逐行核验）：`StatsWrappedFS`（最外层统计，`builder.rs:278`）→ `PathLockWrappedFS`（路径锁，`builder.rs:273`）→ `MountableFS`（`builder.rs:196`/`:205`） → **每个挂载后端内部**再包 `MultiWriteWrappedFS`（primary+backups 多写，内含 `EncryptionWrappedFS`：HKDF(account_id) 加密 + `.encrypt` 临时文件 + replace 原子发布，`core/encryption_wrapper.rs`；多写装配在 `multibackend/factory.rs:55-93`，单后端路径 `mountable.rs:389`）→ 插件。（2026-09-13 修正：此前版本把顺序写成"MultiWrite → Encryption → Stats → MountableFS"且漏了 PathLock 层——那是未核验时的错误推断。）
 - core/ 全模块：builder / context / encryption_wrapper / errors / filesystem（trait + validate_virtual_path）/ glob / internal_names（`.path.ovlock` 等常量）/ mountable / multibackend_wrapper / plugin / stats(_wrapper) / types。
 
-### A2. 七个插件：3 内容 + 4 服务
+### A2. 七个插件：5 内容/持久化后端 + 2 控制面
+> ⚠️ **2026-10-19 第五轮修正**：本节标题原写“3 内容 + 4 服务”，与本文 `:7` 明令禁止的“4 内容 + 3 服务面”是同一个发明的两次换皮——**数字对调、错误照旧**。代码里 `is_control_plugin` 只认 2 个（`queuefs`/`serverinfofs`），`kvfs`/`sqlfs` 是内容/持久化后端。本文 `:7` 早就写对了，这一节没跟上。
+
 
 | 插件 | 角色 | 备注 |
 |---|---|---|
 | localfs | 内容落盘（唯一触 OS） | Windows 专属路径 4 处，见 [`../vfs/02`](../vfs/02-platform-behavior.md) |
 | s3fs | 对象存储内容 | "路径"=对象键 |
 | memfs | 内存内容 | 测试/临时 |
-| kvfs / queuefs / sqlfs / serverinfofs | **服务插件**：QueueFS 队列（默认 sqlite）、KV、serverinfo | 不在 `/local` 内容路径上；`supports_encrypted_publish` 只认三个内容插件（`multibackend/factory.rs:30-33`） |
+| queuefs / serverinfofs | **控制面插件**（代码里唯一被判定为 control 的两个） | `crates/ragfs/src/core/mountable.rs:356` `matches!(name, "queuefs" | "serverinfofs")`；
+| kvfs / sqlfs | **持久化后端**（不是控制面） | 旧版把这两个也算成“服务面”，与代码的 control 判定不符；`supports_encrypted_publish` 只认三个内容插件（`multibackend/factory.rs:30-33`） |
 
 ### A3. git 层：不是 git，是"git 语义的纯 Rust 对象存储"
 
