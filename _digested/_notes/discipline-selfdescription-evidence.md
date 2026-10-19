@@ -5,7 +5,7 @@
 - **基线**：`v0.5.0` = `20f9c1136`。原锚点基于 `0f77ab56`。
 - **计数变化**：CI workflow 26 → **30**；测试文件 655 → **730**（728 `test_*.py` + 2 `*_test.py`）；`tests/` 顶层子目录 29 → **31**；`skipif` 18（`pytest.mark.skipif` 实测 18 处）；`pytest.mark.skip` 仍 3。
 - **结构变化**：`docs/design/`、`docs/plans/`、`docs/superpowers/` **整目录删除**——本报告里凡引用设计稿的段落，都已无一手来源可核。多语 README/CONTRIBUTING/RELEASE 移入 `docs/repository/`。官方 docs 只剩 en/zh（各 110 个 md）。
-- **新增守卫**：`_docs.yml` 现有四道检查（theme 测试、双语一致性、API 参考、构建后锚点）；`gateway.yml` 是第一个给核心域之外的 Python 子系统接 pytest 的 workflow。
+- **新增守卫**：`_docs.yml` 现有四道检查（theme 测试、双语一致性、API 参考、构建后锚点）——**其中真正 v0.5.0 新增的是后两道里的 `check:docs` 与 `check-built-anchors.py`；基线的 `_docs.yml` 已有 theme 与 check:api 两道`**：`gateway.yml` 是第一个给核心域之外的 Python 子系统接 pytest 的 workflow。
 - **未修复**：`_test_full.yml` 仍无 pytest 且无 workflow 调用它；根级 `AGENTS.md` 仍不存在；`README.md:111` 仍写 "0.3.22"。
 
 
