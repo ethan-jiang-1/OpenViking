@@ -11,8 +11,8 @@
 > |---|---|
 > | PathLock 后端从 **2 个变 3 个**：新增 Redis 后端 `RedisPathLockProvider` | `lock/cache_provder.rs` **文件新增**（内容 1869 行），`lock/mod.rs:27` 导出 |
 > | 锁配置长出 `provider` 三选一 + `namespace` | `openviking_cli/utils/config/agfs_config.py:308-348`（`filesystem`/`memory`/`cache`，`cache` 必填 namespace 且限 ASCII） |
-> | `localfs` 插件重写 819 行 | `crates/ragfs/src/plugins/localfs/mod.rs` |
-> | 锁管理器重写 397 行、锁指标与 wrapper 各改 200 行量级 | `lock/manager.rs`、`lock/metrics.rs`、`lock/wrapper.rs` |
+> | `localfs` 插件重写 **819 行改动**（+381/−438；文件现 2010 行） | `crates/ragfs/src/plugins/localfs/mod.rs` |
+> | 锁管理器运营改动 **397 行**（+254/−143）、wrapper **+174/−31**；**`lock/metrics.rs` 只改 8 行**（42 行的文件，仅把 `*_duration_ms` 换成 `*_duration_ns`） | `lock/manager.rs`、`lock/metrics.rs`、`lock/wrapper.rs` |
 >
 > **对本文的影响**：下面凡涉及"锁"的论断，都是**按 `filesystem` 单后端写的**。真正跨进程/跨机器时，现在可以选 Redis——那时的原子性和活性保证由 `cache_provder.rs` 提供而非本地文件系统。`viking://agent` 命名空间的变化见 [`core/01`](../core/01-viking-uri-and-vfs.md)。
 
@@ -90,7 +90,7 @@ Quickstart 明文三 OS（`docs/en/getting-started/02-quickstart.md:10`，中文
 
 ## v0.5.0 复核：localfs 重写后风险表仍成立，锚点全部换代（2026-10-19）
 
-`crates/ragfs/src/plugins/localfs/mod.rs` 在 v0.5.0 被重写 **819 行**（主要是 grep 去外部依赖，见 [`03`](03-operation-semantics.md) 末节）。结果：
+`crates/ragfs/src/plugins/localfs/mod.rs` 在 v0.5.0 有 **819 行改动**（+381/−438，文件现 2010 行——不是被重写成 819 行；主要是 grep 去外部依赖，见 [`03`](03-operation-semantics.md) 末节）。结果：
 
 - **9 条风险的结论全部仍然成立**——`rename` 的两平台分裂、`chmod` no-op、就地写无 temp+rename、大小写零防护等，逐条对着新代码复核过。
 - **但 4 条锚点全部失效**（文件头部的 ripgrep 探测代码删除，整体行号上移）：`rename` 1171→**1014**、`chmod` 1257→**1117**、`write` 1010→**855**、`canonicalize` 63→**124**。已就地改正，旧行号保留在括号里以便对照。
