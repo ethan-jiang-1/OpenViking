@@ -110,9 +110,7 @@
 5. **agent 例外通道**：`find/search/grep/glob/add-resource/add-skill/add-memory` 允许把查询/URI 当作第一个裸位置参数，不会被预解析器误判为 help 误用（`main.rs:2450-2455`）——这就是"裸 `ov 用户问题` 式调用"能工作的原因。
 6. 【解释】回到 [`03-operation-semantics`](../vfs/03-operation-semantics.md) 的语义陷阱：CLI 的 `find` 同样是语义检索（不是按名找文件，但支持 `--image` 图像查询与 `--threshold/--after/--before` 过滤），`mv/rm` 同样同步向量索引——CLI 只是 HTTP API 的皮，server 语义不变。
 
-## 状态标注
-
-### v0.5.0 复核（2026-10-19）
+## v0.5.0 复核（2026-10-19）
 
 **44 个顶层命令：一个没增、没删、没改名。** 这是本轮同步里少见的"零 breaking 面"——对照同期 MCP 工具 +5、pi 工具名全改、Watch 语义收紧，CLI 是稳定的那一面。
 
@@ -132,3 +130,5 @@
 - 硬事实：全部命令枚举与锚点（源码可复核）；与 docs 的 3 处缺漏
 - 解释：对 agent 实操含义的推演（语言门/`-o json` 的用法建议）、"agent 友好"定性
 - 未定：`chat`/`tui` 的 TUI 在 Windows 终端下的兼容细节（wrapper 用 subprocess.call 规避，issue #587，未实测）
+
+## 状态标注
