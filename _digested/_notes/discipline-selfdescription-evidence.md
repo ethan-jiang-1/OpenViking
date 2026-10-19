@@ -156,7 +156,7 @@
 
 ### B5. 设计文档文化（docs/design/）
 
-【硬事实】docs/design/ 有 21 个设计/计划文档（含 assets/ 子目录）。命名可见两种体裁：`*-design.md` 与 `*-plan.md`/`*-rfc.md`（如 l0-l1-okf-sidecars-rfc.md、parser-two-layer-refactor-plan.md）。
+【硬事实】docs/design/ 在 `v0.4.19` 有 **21 个 md** 设计/计划文档 + `assets/` 下 5 个图文件（`.png`/`.svg`），共 26 个文件；`v0.5.0` 全部删除。命名可见两种体裁：`*-design.md` 与 `*-plan.md`/`*-rfc.md`（如 l0-l1-okf-sidecars-rfc.md、parser-two-layer-refactor-plan.md）。
 - **状态标记不统一**：l0-l1-okf-sidecars-rfc.md:3 有 `Status: Draft`；memory-link-design.md:4 有 `> 状态: Draft`（引用块格式）；local-embedding-llama-cpp-design.md:4 `Status: 已批准进入实现`（中文值）；ov-compile-design.md:5 表格内 `状态 | 历史设计，现行方案见下方说明`（自我宣布过时）。其余约半数（git-version-control-design.md、metric-design.md、resource-ingestion-routing.md、agent-evolution-global-switch-design.md、workspace-config-and-peer-source-rfc.md 等）无状态行。状态字段格式、语言、位置、有无——四种做法并存。
 - **与实现同步的迹象**：文档间存在活引用（RFC 引用 `docs/zh/concepts/03-context-layers.md`，该文件存在）；ov-compile-design.md 被标注"历史设计，现行方案见下方说明"并在文内更新，说明有回写机制；usage_reporter 与 ov-compile 在 openviking/ 源码中均有对应实现模块（openviking/usage_reporter/、openviking/storage/content_write.py 等）。cuVS 设计有配套 benchmark 计划（openviking-cuvs-benchmark-plan.md）与 tests/vectordb/test_cuvs_*。【解释】设计文档是活的、与实现有对应关系，但缺统一的 lifecycle 元数据（Status/Date/ADR 编号），无法机器判断哪份是现行设计。
 
