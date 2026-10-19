@@ -6,7 +6,7 @@
 
 L0（一句话摘要）/ L1（概览）/ L2（全文）不是文档修辞，而是一套**物理机制**：每个上下文对象在向量库里按 level 存三条记录，目录以 `.abstract.md` / `.overview.md` sidecar 文件承载 L0/L1，sidecar 是 **OKF 格式（YAML frontmatter + body）**，metadata 有写保护。设计稿（~~`docs/design/l0-l1-okf-sidecars-rfc.md`~~，当时仍标 Draft）与实现**高度同步**——RFC 的存储格式与读路径已落地，但 freshness 父冒泡属于 Future Work、只是部分实现。
 >
-> **v0.5.0 的两处口径修正**：① `docs/design/` 目录已从 upstream 删除，该 RFC 只剩**搬迁前旧分支里的副本**（`backup/ethan-before-v050`；搬迁到 v0.5.0 之后工作树里也没有了）；② "L0/L1 分层是两级检索的物理前提"这句**作废**——两级递归没了，level 现在是索引过滤条件（见下）。
+> **v0.5.0 的两处口径修正**：① `docs/design/` 目录已从 upstream 删除，该 RFC 只剩**搬迁前旧分支里的副本**（`backup/ethan-before-v050`——**本地分支，已实测存在**；搬迁到 v0.5.0 之后工作树里也没有了）；② "L0/L1 分层是两级检索的物理前提"这句**作废**——两级递归没了，level 现在是索引过滤条件（见下）。
 
 ## 层定义与物理形态
 
