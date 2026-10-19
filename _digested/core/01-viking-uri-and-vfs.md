@@ -23,7 +23,7 @@ viking:// 是一个**带命名空间白名单的虚拟文件系统**：公开 sc
 
 ## 目录树从哪来：两个来源
 
-1. **预设目录**（`core/directories.py:53-188` `PRESET_DIRECTORIES`）：`user` scope 预置 `memories/`（九个分类子目录）、`resources/`、`privacy/`、`peers/`、`skills/`、`sessions/`；**v0.5.0 新增 `agent` 树**（`:155-188`）：`skills/`、`endpoints/`（A2A/ANP 等通信端点）、`tools/`（MCP server 配置）、`payments/`（AP2 等支付能力）。**每个目录定义自带 abstract（L0）与 overview（L1）文案**（`DirectoryDefinition` :33-40），`DirectoryInitializer`（`:191`）落盘时同步播种 L0/L1 向量（`:381-423`）。模块 docstring（`:6`）原话："all directories are data records"
+1. **预设目录**（`core/directories.py:53-188` `PRESET_DIRECTORIES`）：`user` scope 预置 `memories/`（九个分类子目录）、`resources/`、`privacy/`、`peers/`、`skills/`、`sessions/`；**v0.5.0 新增 `agent` 树**（`:155-188`）：`skills/`、`endpoints/`（A2A/ANP 等通信端点）、`tools/`（MCP server 配置）、`payments/`（AP2 等支付能力）。**每个目录定义自带 abstract（L0）与 overview（L1）文案**（`DirectoryDefinition` :33-40），`DirectoryInitializer`（`:191`）落盘时**入队**播种 L0/L1 向量（`:381-423`，末尾 `await asyncio.gather(...enqueue_embedding_msg...)` 在 `:409-423`）——**是异步入队，不是同步写入向量库**，原文"同步播种"写错了。模块 docstring（`:6`）原话："all directories are data records"
 2. **ingest 生长**（`core/building_tree.py:11` `BuildingTree` + `parse/tree_builder.py:39` `TreeBuilder`）：v5.0 流水线 = Parser 建 temp 目录结构 → TreeBuilder 建 URI 元数据 → ResourceProcessor 提交 → SemanticProcessor 异步生成语义
 
 ## "像文件一样操作"的操作面
@@ -45,7 +45,7 @@ viking:// 是一个**带命名空间白名单的虚拟文件系统**：公开 sc
 1. **"user 下直接写文件"不走**：`viking://user/<reserved>` 无 uid 形式已废弃并报错（`namespace.py:296-314`）——user scope 必须带 user_id。
 2. **`~` 别名不持久化**：只在请求边界展开，落盘前已解析为 canonical URI。
 3. **目录不是容器对象**：目录本身是数据记录（带 L0/L1 与向量）。v0.4.19 时这条是"目录递归"的前提；v0.5.0 递归删除后它**依然重要**，但原因是另一个：目录记录是**检索结果的合法终点**，agent 可以只拿 L0/L1 就决定要不要继续读（见 [03](03-retrieval-global-recall.md)）。
-4. **`agent` 命名空间从"skills 专用"变成"账号级能力面"**：v0.5.0 给它补了 `endpoints`/`tools`/`payments` 三棵子树，并把它划进永不拒绝集合。旧文"`agent/skills` 是唯一的 agent 共享根"**已作废**——现在整个 `viking://agent` 都可见；`skills` 是其中**可写**的子树之一。
+4. **`agent` 命名空间从"skills 专用"变成"账号级能力面"**：v0.5.0 给它补了 `endpoints`/`tools`/`payments` 三棵子树，并把它划进永不拒绝集合。旧文"`agent/skills` 是唯一的 agent 共享根"**已作废**——现在整个 `viking://agent` 都可见；**但 `skills` 恰恰不是普通的可写子树**——MCP `write` 的 docstring 明写 `Writable scopes: viking://resources/, viking://user/{user_id}/, viking://agent/`，随后补一句 `Do not write inside a skill package under viking://agent/skills/ either: a plain write skips installation, so the skill's abstract, overview and source metadata go stale. Change a skill with the add_skill tool.`（`server/mcp_endpoint.py:1222-1223`）。**skill 包只能经 `add_skill` 改动**（见 [`integration/01`](../integration/01-start-here.md)），裸 `write` 会绕过安装流程、让 L0/L1 与 source metadata 变旧。
 
 ## 状态标注
 

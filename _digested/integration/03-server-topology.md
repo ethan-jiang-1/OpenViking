@@ -43,9 +43,9 @@ OpenViking server 是一个**单进程 asyncio 应用**：FastAPI 只是壳，�
 
 ## 入口面：27 个常规 router + 2 个特殊（`bot`、`bot_studio`）+ OAuth（条件）
 
-**27 个 `include_router`**（`app.py:596-622`）：system、acl、admin、**gateway（v0.5.0 新增，`:599`）**、agent_evolution、compile、resources、filesystem、content、console、search、privacy_configs、skills、sessions、snapshot、stats、pack、debug、observer、openviking_assets、metrics、tasks、user_settings、watches、**webdav**（`prefix="/webdav/resources"`，`routers/webdav.py:26`——把 `viking://resources/...` 暴露成 WebDAV 目录，OS 文件管理器/办公软件可直接挂）。
+**27 个 `include_router`**（`app.py:596-622`）：system、acl、admin、**gateway（v0.5.0 新增，`:599`）**、agent_evolution、compile、resources、filesystem、content、console、search、privacy_configs、skills、sessions、snapshot、stats、pack、debug、observer、openviking_assets、metrics、tasks、user_settings、watches、**webdav**（`app.py:620`，`prefix="/webdav/resources"`，`routers/webdav.py:26`——把 `viking://resources/...` 暴露成 WebDAV 目录，OS 文件管理器/办公软件可直接挂）。
 
-**特殊入口**：`bot_router`（`prefix="/bot/v1"`，VikingBot 代理，`--with-bot` 开关）；**`bot_studio_router`（v0.5.0 新增，`:622`，无前缀）**；`/mcp`（MCP streamable HTTP，session manager 管理，`app.py:809`）；OAuth 2.1 路由（按配置注册，`app.py:686` 之后）。
+**特殊入口**：`bot_router`（`prefix="/bot/v1"`，VikingBot 代理，`--with-bot` 开关）；**`bot_studio_router`（v0.5.0 新增，`:622`，无前缀）**；`/mcp`（MCP streamable HTTP，session manager 管理，`app.py:809`）；OAuth 2.1 路由（按配置注册：`app.py:636` import、`:639` 注册）。
 
 ## 20 个 MCP 工具（`server/mcp_endpoint.py`，权威清单见 `:5-7` docstring）
 

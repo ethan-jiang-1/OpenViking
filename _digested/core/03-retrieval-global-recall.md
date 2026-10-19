@@ -65,7 +65,18 @@ use_rerank = (mode == RetrieverMode.THINKING and self._rerank_client is not None
 - `"semantic"`（默认）：向量召回，可混稀疏向量。
 - `"keywords"`：BM25 全量文本检索，走 `search_by_keywords_in_tenant`（`hierarchical_retriever.py:185-193`）。**只有配了全文索引的后端支持**（volcengine / vikingdb）；图像查询被拒绝。
 
-`find` 与 `search` 都接受这个参数（`_semantic.py:208`、`search_service.py:76`），CLI 侧是 `--search-type semantic|keywords`（`crates/ov_cli/src/main.rs:975-981`）。
+**Python 层两条路径都接受 `search_type`**（`_semantic.py:208` 的 `find` 签名、`hierarchical_retriever.py:104`），但**对外暴露并不对称**——这一点原文写笼统了（2026-10-19 修正）：
+
+| 入口 | 能不能传 `search_type` |
+|---|---|
+| Python `find()` / `search()` | ✅ 都能（`_semantic.py:207`、`search_service.py:120`） |
+| REST `POST /search` | ✅ `search_service.py:120` 有 |
+| REST find | ❌ `FindRequest`（`server/routers/search.py:124-150`）**无此字段** |
+| CLI `ov search` | ✅ `--search-type semantic\|keywords`（`crates/ov_cli/src/main.rs:975-982`） |
+| CLI `ov find` | ❌ `Find` 子命令没有该参数，`handle_find` 也不接收（`main.rs:3915-3930`） |
+| MCP `find`/`search` | ❌ 两者都没有该参数 |
+
+**所以"关键词检索"这条能力在产品面上只能从 `search` 进入，`find` 永远走 semantic。** 原文写"`find` 与 `search` 都接受"，只在 Python 层成立。
 
 ## find 与 search
 
@@ -89,7 +100,7 @@ Skills 不走通用检索：`SkillPackageRetriever` 分页拉向量命中，然�
 
 - `openviking/retrieve/skill_package_retriever.py:20-37`
 - `openviking/retrieve/skill_results.py:19-39`（折叠）、`:66-93`、`:96-127`
-- 调用方只有 `service/search_service.py:211-253 find_skills` → Skills API
+- `find_skills` 定义在 `service/search_service.py:211-253`，**调用方不止 Skills API**（2026-10-19 修正）：① Skills REST 路由 `server/routers/skills.py:611/642/654`；② **MCP `find` 在 `context_type="skill"` 时也走它**（`server/mcp_endpoint.py:476-477`）；③ 检索装配器的 skill 桶 `retrieve/context_assembler/gather.py:334`（经 `_safe_find`）。原文写"调用方只有 Skills API"，漏掉了 MCP 与检索装配两条。
 
 理由很直白：一个 skill 包里可能有很多文件命中，agent 需要的是"哪个 skill 相关"，不是"哪个文件相关"。
 

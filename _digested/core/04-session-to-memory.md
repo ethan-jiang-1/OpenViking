@@ -18,7 +18,7 @@ session 提交（commit）是**两阶段异步管道**：Phase 1 在路径锁内
 |---|---|---|
 | **Phase 1**（Archive prep） | **`pathlock_acquire_exact(session_path)`** 精确路径锁（`:1357`）内：retention 切分（turn_budget 模式走纯规划的 `plan_retention`，`session/retention.py`）、**并发写 phase1 marker（内含可恢复 intent：SessionCommitMsg + 原始/归档/保留三份消息清单）** + `{archive_uri}/messages.jsonl`、入队 Phase 2、写 ready marker；失败写 failed marker + 内存回滚 + 重抛 | **v0.5.0 已把回滚与 marker 逻辑拆出成模块**：`session/archive_store.py`、`session/checkpoints.py`（`CheckpointPlanner`/`CheckpointRequest`）、`session/working_memory.py` |
 | 入队 | `QueueManager` + `SessionCommitMsg`（msg 构造 `:1519`、入队紧随） | `session.py:1519`、`storage/queuefs/session_commit_msg.py:26`——**该 msg 新增 `memory_policy_version: int = 1`**，用于让在途任务保留提交当时的 WM 语义（`:38-41` 把无版本号的历史快照强制成 `working_memory.enabled=True`） |
-| **Phase 2**（Memory extraction） | SessionCommit 队列消费者（**并发 8、1s 轮询**，`queue_manager.py:29 DEFAULT_MAX_CONCURRENT_SESSION_COMMIT = 8`、`:106 _REQUEUE_POLL_INTERVAL = 1.0`）→ `session.resume_queued_commit(msg)`；session 不存在则 fail task；**未处理完 → 重新入队 + report_requeue** | `queuefs/session_commit_processor.py:25`（类）、`:64-80`（missing session → tracker fail）、`:83`（`processed = await session.resume_queued_commit(msg)`）、`:84-91`（重入队）、`:116-125`（`on_dequeue` → `ProcessResult.success()/requeued()/failed()`）。**提交处理器本体已移到 `session.py:1699 resume_queued_commit`** |
+| **Phase 2**（Memory extraction） | SessionCommit 队列消费者（**并发 8、1s 轮询**，`queue_manager.py:29 DEFAULT_MAX_CONCURRENT_SESSION_COMMIT = 8`、`:106 _REQUEUE_POLL_INTERVAL = 1.0`）→ `session.resume_queued_commit(msg)`；session 不存在则 fail task；**未处理完 → 重新入队 + `ProcessResult.requeued()`**（同格下方已给出准确锚点；旧文曾误写成不存在的 `report_requeue` 符号） | `queuefs/session_commit_processor.py:25`（类）、`:64-80`（missing session → tracker fail）、`:83`（`processed = await session.resume_queued_commit(msg)`）、`:84-91`（重入队）、`:116-125`（`on_dequeue` → `ProcessResult.success()/requeued()/failed()`）。**提交处理器本体已移到 `session.py:1699 resume_queued_commit`** |
 
 Phase 2 续跑入口：`session.py:1947` `_run_memory_extraction()`；分批：`_extract_long_term_memories_with_batching()`（`:1857`，批计划 `session/extraction_batch.py:26-31`）。
 
@@ -29,9 +29,10 @@ Phase 2 续跑入口：`session.py:1947` `_run_memory_extraction()`；分批：`
 ## 抽取是 agentic 的
 
 - 抽取主循环：`session/memory/extract_loop.py:117` `ExtractLoop`（"single LLM call with tool use" ReAct，`:4`）；操作解析 `resolve_operations` `:767`（isolation handler 落 URI，`memory_isolation_handler.py:347-400`）
-- **工具面只有 3 个只读工具**：`read`（tools.py:174，剥 links/backlinks 隐藏字段）/ `search`（`:264`）/ `ls`（`:329`），注册表 `:441-451`（`register_tool(...)` `:455-457`）——**LLM 没有 write 工具**；写入是 LLM 最终输出的结构化 operations（create/update/delete/reorganize 计划），经 resolve_operations 执行
+- **注册表里有 3 个只读工具，但 LLM 实际只看到 1 个（或 0 个）**——这是 2026-10-19 复核修正的一处重要口径错误。注册的三个是 `read`（tools.py:174，剥 links/backlinks 隐藏字段）/ `search`（`:264`）/ `ls`（`:329`），注册语句 `:455-457`；**但 `SessionExtractContextProvider.get_tools()`（`session_extract_context_provider.py:617-622`）只返回 `["read"]`**，且在 `memory.eager_prefetch=True`（默认）时**返回空列表**——注释写明"eager_prefetch 模式下不提供工具，所有内容已在 prefetch 中加载"。`search`/`ls` 只被预取逻辑内部调用（`:565-590`），不暴露给模型；`SearchTool` 真正进工具面是**离线 compile 路径**（`consolidation_context_provider.py:74-79`），`patch_merge_context_provider.py:163` 同样返回 `[]`。
+  **教训**：注册表大小 ≠ LLM 工具面。原文把 `register_tool` 的三次调用当成了模型可调用的工具集，这正是"函数存在 → 所以被用"的推论跳跃。无论如何，**LLM 没有 write 工具**这一结论成立：写入是 LLM 最终输出的结构化 operations（create/update/delete/reorganize 计划），经 resolve_operations 执行
 - 抽取上下文提供者：`session/memory/session_extract_context_provider.py:54`；指令文案（`:211`）要求产出"single atomic plan to **create, update, delete, or reorganize** memories"；另有 `_eager_prefetch` 读取点 `:83`
-- **抽取前先预取已有记忆**：`session_extract_context_provider.py:481` `prefetch()`（用 `MemorySearchTool`/`MemoryReadTool` 拉相关已有记忆）——LLM 看到旧记忆才决定新记忆的去向
+- **抽取前先预取已有记忆**：`session_extract_context_provider.py:481` `prefetch()`（用 `MemorySearchTool`/`MemoryReadTool` 拉相关已有记忆）——LLM 看到旧记忆才决定新记忆的去向。注意这两个工具是在 **prefetch 内部**被调用的，不是作为工具暴露给模型（见上一条）
 - 流式增量更新的定位：`memory/streaming_memory_updater.py:155` **不是聊天实时通道**——它是 compressor_v3 patch-merge 抽取内、ExtractLoop 产出 operations 之后的**操作合流/分批应用器**（`:155`/`:161`/`:172` 入口、分组合流 `:490 _apply_operations`、append-only 快路径 `:367 _apply_append_only_request_now`；与 extraction_id 绑定防跨快照误合并，`dataclass.py:157-163`；构造点 `compressor_v3.py:729-750`）
 
 ## 决策分工：LLM 判语义，代码守边界
