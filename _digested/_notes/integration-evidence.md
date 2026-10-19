@@ -213,7 +213,7 @@ connecting to a local server without root_api_key (dev mode)」。
   `/openapi.json` 用 openapi-ts（@hey-api/client-axios）生成 `src/gen/ov-client`。
 - 认证：`src/lib/ov-client/client.ts:191` 请求头 `X-API-Key`；key 存 sessionStorage
   （:156-165, :238），并有 admin key 分流逻辑（:188-190）。
-- 它**同时是 server 的一个挂载点**：`openviking/server/app.py:793-833` — 优先 `OPENVIKING_WEB_STUDIO_DIR`
+- 它**同时是 server 的一个挂载点**：`openviking/server/app.py:744-786` — 优先 `OPENVIKING_WEB_STUDIO_DIR`（`:746`）
   环境变量，否则 `openviking/web_studio/dist`（docker `web-studio-builder` 阶段产出），
   挂到 `/studio`（`app.py:786` 「Web Studio mounted at /studio」；旧基线为 `:833`）。
 【解释】Web Studio 本质是运维/管理控制台（资源、检索、bot 会话、诊断），不是给外部 agent 的
