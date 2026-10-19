@@ -4,7 +4,7 @@
 >
 > - **基线**：`v0.5.0` = `20f9c1136`。原锚点基于 `0f77ab56`。
 > - **最大缺口：本报告写于 gateway 出现之前。** v0.5.0 新增第七种接入形态 `openviking-gateway`（独立进程，默认 `127.0.0.1:1935`，约 7k 行纯 Python ASGI，与内核零代码耦合），本报告完全没有覆盖——见 [`../integration/01`](../integration/01-start-here.md) 的 §OpenViking Gateway。
-> - 其他过时项：MCP 工具 15 → **20**；`sessions/{id}/used` **删除**；`heartbeat` **删除**；pi 工具名改 `openviking_<tool>`；安装器默认装 `ov`；新增 Kimi Code / ZCode 宿主。
+> - 其他过时项：MCP 工具 15 → **20**；`sessions/{id}/used` **删除**（**实为 `v0.4.22`**）；~~`heartbeat` **删除**~~（**该端点从未存在，已撤回**）；pi 工具名改 `openviking_<tool>`；安装器默认装 `ov`；新增 Kimi Code / ZCode 宿主。
 > - **仍有效**：`/api/v1` 路由分组结构、`AuthPlugin` 5 插件注册模型（无条件 3 + 条件 2）、三语言 SDK 定位对比、`ov` = Rust 二进制 + execv 包装。
 - **2026-10-19 二次复核（本报告自身的问题）**：本报告的行号是整批按 `0f77ab56` 写的，且有一大段用了 `` `符号`(:NN) `` 这种**裸行号**写法，锚点检查器看不到。逐条手工复核后发现以下已修正：
   `mcp_endpoint.py` 行号整体漂移（工具清单 15→20 个，`find` :249→:449、`read` :501→:852、`grep` :1333→:1975……）、`create_mcp_app` :1538→**:2208**、`_apply_portable_schemas` :1514→**:2184**、app.py 的 MCP lifespan :388-390→**:381-383**、Web Studio 块 :793-833→**:744-786**（原值甚至越过了 812 行的文件末尾）。
